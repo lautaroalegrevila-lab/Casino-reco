@@ -7,7 +7,7 @@
 <style>
 body { font-family: Arial; text-align: center; background: #0b0b0b; color: white; }
 button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; }
-input { padding: 5px; width: 80px; text-align: center; }
+input { padding: 5px; width: 100px; text-align: center; }
 .game { display: none; margin-top: 20px; }
 </style>
 
@@ -15,7 +15,7 @@ input { padding: 5px; width: 80px; text-align: center; }
 <body>
 
 <h1>🎰 Casino Pro</h1>
-<p>💰 Dinero: <span id="money">1000</span></p>
+<p>💰 Dinero: <span id="money">0</span></p>
 
 <h3>Juegos</h3>
 <button onclick="showGame('blackjack')">🃏 Blackjack</button>
@@ -27,8 +27,10 @@ input { padding: 5px; width: 80px; text-align: center; }
 <h3>Extras</h3>
 <button onclick="crime()">🚔 Crime</button>
 <button onclick="award()">🎁 Award</button>
+<button onclick="resetMoney()">💥 Reset</button>
 
-<p>Apuesta: <input type="number" id="bet" value="100"></p>
+<p>Apuesta (poné "A" para todo):</p>
+<input type="text" id="bet" value="100">
 
 <!-- BLACKJACK -->
 <div id="blackjack" class="game">
@@ -78,12 +80,26 @@ input { padding: 5px; width: 80px; text-align: center; }
 
 <script>
 
+// 💥 RESET AUTOMÁTICO UNA VEZ
+if(!localStorage.getItem("resetV2")){
+  localStorage.setItem("money", 0);
+  localStorage.setItem("resetV2", "true");
+}
+
 // 💾 DINERO
-let money = localStorage.getItem("money") || 1000;
+let money = parseInt(localStorage.getItem("money")) || 0;
 
 function updateMoney(){
   localStorage.setItem("money", money);
   document.getElementById("money").innerText = money;
+}
+
+// RESET MANUAL
+function resetMoney(){
+  money = 0;
+  localStorage.setItem("money", 0);
+  msg("💥 Dinero reiniciado");
+  updateMoney();
 }
 
 // CAMBIAR JUEGO
@@ -92,7 +108,30 @@ function showGame(game){
   document.getElementById(game).style.display='block';
 }
 
-// ---------------- BLACKJACK ----------------
+// APUESTA
+function getBet(){
+  let input = document.getElementById("bet").value;
+
+  if(input.toLowerCase() === "a"){
+    return money;
+  }
+
+  let bet = parseInt(input);
+
+  if(isNaN(bet) || bet <= 0){
+    alert("Apuesta inválida");
+    return null;
+  }
+
+  if(bet > money){
+    alert("No tenés suficiente dinero");
+    return null;
+  }
+
+  return bet;
+}
+
+// BLACKJACK
 let player=[], dealer=[], gameOver=false;
 
 function card(){
@@ -148,7 +187,7 @@ function updateBJ(){
   document.getElementById("dScore").innerText=score(dealer);
 }
 
-// ---------------- SLOTS ----------------
+// SLOTS
 function spin(){
   let bet=getBet(); if(!bet) return;
   let s=["🍒","🍋","🍊","⭐","💎"];
@@ -161,7 +200,7 @@ function spin(){
   updateMoney();
 }
 
-// ---------------- DADOS ----------------
+// DADOS
 function rollDice(){
   let bet=getBet(); if(!bet) return;
   let d1=rand6(), d2=rand6();
@@ -174,7 +213,7 @@ function rollDice(){
   updateMoney();
 }
 
-// ---------------- TOWERS ----------------
+// TOWERS
 let tLevel=0, mult=1, playing=false;
 
 function startTowers(){
@@ -220,8 +259,20 @@ function updateTowers(){
   document.getElementById("mult").innerText=mult;
 }
 
-// ---------------- CRIME ----------------
+// CRIME (cooldown 10 min)
 function crime(){
+  let now = Date.now();
+  let last = localStorage.getItem("lastCrime") || 0;
+  let cooldown = 10 * 60 * 1000;
+
+  if(now - last < cooldown){
+    let t = Math.ceil((cooldown - (now - last)) / 1000);
+    msg("⏳ Esperá " + t + "s");
+    return;
+  }
+
+  localStorage.setItem("lastCrime", now);
+
   if(Math.random()<0.4){
     money-=2000;
     msg("🚔 Fallaste -2000");
@@ -230,10 +281,11 @@ function crime(){
     money+=win;
     msg("💰 Ganaste "+win);
   }
+
   updateMoney();
 }
 
-// ---------------- AWARD ----------------
+// AWARD (7 min)
 function award(){
   let now=Date.now();
   let last=localStorage.getItem("lastAward")||0;
@@ -252,7 +304,7 @@ function award(){
   updateMoney();
 }
 
-// ---------------- LEADERBOARD ----------------
+// LEADERBOARD
 function saveScore(){
   let name=document.getElementById("playerName").value||"Anon";
   let scores=JSON.parse(localStorage.getItem("scores"))||[];
@@ -280,12 +332,6 @@ function showScores(){
 // UTIL
 function rand(){return Math.floor(Math.random()*5);}
 function rand6(){return Math.floor(Math.random()*6)+1;}
-
-function getBet(){
-  let bet=parseInt(document.getElementById("bet").value);
-  if(bet>money||bet<=0){alert("Apuesta inválida"); return null;}
-  return bet;
-}
 
 function msg(t){
   document.getElementById("result").innerText=t;
