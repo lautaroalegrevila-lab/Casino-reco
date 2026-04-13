@@ -1,41 +1,34 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>🎰 Casino Pro</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            background: #1a1a1a; /* Fondo oscuro pro */
-            color: white; 
-            margin: 0;
-        }
-
-        .overlay {
-            background: rgba(0, 0, 0, 0.85);
-            min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        button { 
-            padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
-            border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
-            min-width: 100px;
-        }
-        button:hover { background: #e6c200; transform: scale(1.05); }
-        button:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
-
-        input { padding: 5px; width: 120px; text-align: center; border-radius: 5px; border: none; margin: 5px; }
-
-        .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-
-        #money { color: #00ff00; font-weight: bold; font-size: 1.5em; }
-        #result { font-weight: bold; color: gold; margin-top: 15px; min-height: 1.5em; font-size: 1.1em; }
-        
-        .slot-display { font-size: 2.5em; background: #333; padding: 10px; border-radius: 10px; display: inline-block; margin: 10px; }
-    </style>
+<meta charset="UTF-8">
+<title>🎰 Casino Pro</title>
+<style>
+    body { 
+        font-family: Arial, sans-serif; 
+        text-align: center; 
+        background: url('https://tcdn.com.br') no-repeat center center fixed; 
+        background-size: cover;
+        color: white; 
+        margin: 0;
+    }
+    .overlay {
+        background: rgba(0, 0, 0, 0.75);
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    button { 
+        padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
+        border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { background: #e6c200; transform: scale(1.05); }
+    button:disabled { background: #555; cursor: not-allowed; }
+    input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
+    .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+    #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
+    #result { font-weight: bold; color: gold; margin-top: 10px; }
+</style>
 </head>
 <body>
 
@@ -61,7 +54,7 @@
     <!-- BLACKJACK -->
     <div id="blackjack" class="game">
         <h2>🃏 Blackjack</h2>
-        <p>Tus cartas: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
+        <p>Jugador: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
         <p>Crupier: <span id="dCards">-</span> | Puntos: <span id="dScore">0</span></p>
         <button onclick="startBJ()">Repartir</button>
         <button onclick="hit()">Pedir</button>
@@ -71,14 +64,14 @@
     <!-- SLOTS -->
     <div id="slots" class="game">
         <h2>🎰 Slots</h2>
-        <div id="slotRes" class="slot-display">💎 7️⃣ 💰</div><br>
+        <p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💎</p>
         <button onclick="spin()">Girar</button>
     </div>
 
     <!-- DADOS -->
     <div id="dice" class="game">
         <h2>🎲 Dados</h2>
-        <p id="diceRes" style="font-size: 3em;">-</p>
+        <p id="diceRes" style="font-size: 2em;">-</p>
         <button onclick="rollDice()">Tirar</button>
     </div>
 
@@ -95,7 +88,7 @@
     <div id="roulette" class="game">
         <h2>🎰 Ruleta</h2>
         <p style="font-size: 1.5em;">🎯 Número: <span id="rNumber">-</span> | Color: <span id="rColor">-</span></p>
-        <input type="number" id="rInput" placeholder="Número 0-36"><br>
+        <input type="number" id="rInput" placeholder="0-36"><br>
         <button onclick="playRoulette('rojo')">🔴 Rojo</button>
         <button onclick="playRoulette('negro')">⚫ Negro</button>
         <button onclick="playRoulette('numero')">🎯 Pleno (x35)</button>
@@ -105,7 +98,6 @@
 </div>
 
 <script>
-// --- VARIABLES Y NÚCLEO ---
 let money = parseInt(localStorage.getItem("money")) || 1000;
 let bjBet = 0, pHand = [], dHand = [];
 let tBet = 0, tLevel = 0, tMult = 1;
@@ -122,141 +114,139 @@ function msg(t) { document.getElementById("result").innerText = t; }
 function showGame(game) {
     document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
     document.getElementById(game).style.display = 'block';
-    msg("¡Buena suerte!");
 }
 
 function getBet() {
     let input = document.getElementById("bet").value;
     let val = (input.toLowerCase() === "a") ? money : parseInt(input);
-    if (isNaN(val) || val <= 0) { alert("Apuesta no válida"); return null; }
-    if (val > money) { alert("No tenés suficiente dinero"); return null; }
+    if (isNaN(val) || val <= 0 || val > money) { alert("Apuesta inválida"); return null; }
     return val;
 }
 
-// --- EXTRAS (CRIME Y AWARD CON TIEMPO) ---
-function award() {
-    let premio = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
-    updateMoney(premio);
-    msg(`🎁 ¡Bono! Ganaste $${premio}`);
-    localStorage.setItem("a_time", Date.now() + (420 * 1000)); // 7 min
-    actualizarCooldowns();
-}
-
-function crime() {
-    if (Math.random() >= 0.4) { // 60% éxito
-        let botin = Math.floor(Math.random() * (9000 - 1000 + 1)) + 1000;
-        updateMoney(botin);
-        msg(`🔫 ¡Éxito! Robaste $${botin}`);
-    } else {
-        updateMoney(-1000);
-        msg("🚔 ¡La policía te agarró! Perdiste $1000");
-    }
-    localStorage.setItem("c_time", Date.now() + (600 * 1000)); // 10 min
-    actualizarCooldowns();
-}
-
-function actualizarCooldowns() {
-    const config = [
-        { id: "btnAward", clave: "a_time", texto: "🎁 Award" },
-        { id: "btnCrime", clave: "c_time", texto: "🚔 Crime" }
-    ];
-
-    config.forEach(item => {
-        let btn = document.getElementById(item.id);
-        let meta = localStorage.getItem(item.clave);
-        if (meta) {
-            let falta = Math.ceil((meta - Date.now()) / 1000);
-            if (falta > 0) {
-                btn.disabled = true;
-                let m = Math.floor(falta / 60), s = falta % 60;
-                btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                setTimeout(actualizarCooldowns, 1000);
-            } else {
-                btn.disabled = false;
-                btn.innerText = item.texto;
-                localStorage.removeItem(item.clave);
-            }
-        }
-    });
-}
-
-// --- LÓGICA DE JUEGOS ---
+// --- JUEGOS ---
 
 function startBJ() {
-    bjBet = getBet(); if (!bjBet) return;
-    pHand = [rCard(), rCard()]; dHand = [rCard()];
-    renderBJ();
+    let bet = getBet(); 
+    if(!bet) return;
+    bjBet = bet;
+    updateMoney(-bjBet); // SE DESCUENTA AL REPARTIR
+    pHand = [rCard(), rCard()]; 
+    dHand = [rCard()];
+    updateBJ();
+    msg("Apuesta aceptada. ¡Suerte!");
 }
 function rCard() { return Math.floor(Math.random() * 10) + 2; }
-function renderBJ() {
+function updateBJ() {
     let ps = pHand.reduce((a,b)=>a+b,0);
     document.getElementById("pCards").innerText = pHand.join(", ");
     document.getElementById("pScore").innerText = ps;
     document.getElementById("dCards").innerText = dHand.join(", ");
     document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
-    if(ps > 21) { updateMoney(-bjBet); msg("💥 ¡Te pasaste!"); bjBet = 0; }
+    if(ps > 21) { msg("💥 ¡Te pasaste!"); bjBet = 0; }
 }
-function hit() { if(bjBet) { pHand.push(rCard()); renderBJ(); } }
+function hit() { 
+    if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } 
+}
 function stand() {
-    if(!bjBet) return;
+    if(bjBet <= 0) return;
     let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
     while(ds < 17) { dHand.push(rCard()); ds = dHand.reduce((a,b)=>a+b,0); }
-    renderBJ();
-    if(ds > 21 || ps > ds) { updateMoney(bjBet); msg("🎉 ¡Ganaste!"); }
-    else if(ps === ds) msg("⚖️ Empate");
-    else { updateMoney(-bjBet); msg("❌ Perdiste"); }
+    updateBJ();
+    if(ds > 21 || ps > ds) { 
+        updateMoney(bjBet * 2); msg("🎉 ¡Ganaste!"); 
+    } else if(ps === ds) { 
+        updateMoney(bjBet); msg("⚖️ Empate"); 
+    } else { 
+        msg("❌ Perdiste"); 
+    }
     bjBet = 0;
 }
 
 function spin() {
     let bet = getBet(); if(!bet) return;
+    updateMoney(-bet); // SE DESCUENTA AL GIRAR
     const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
     let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
     document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
     if(r1 === r2 && r2 === r3) { updateMoney(bet*10); msg("👑 ¡JACKPOT!"); }
     else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); }
-    else { updateMoney(-bet); msg("Perdiste"); }
+    else { msg("Perdiste"); }
 }
 
 function rollDice() {
     let bet = getBet(); if(!bet) return;
+    updateMoney(-bet); // SE DESCUENTA AL TIRAR
     let d = Math.floor(Math.random()*6)+1;
     document.getElementById("diceRes").innerText = d;
-    if(d > 3) { updateMoney(bet); msg("🎲 ¡Ganaste!"); }
-    else { updateMoney(-bet); msg("🎲 Perdiste"); }
+    if(d > 3) { updateMoney(bet*2); msg("🎲 ¡Ganaste!"); }
+    else { msg("🎲 Perdiste"); }
 }
 
-function startTowers() { tBet = getBet(); if(!tBet) return; tLevel=0; tMult=1; updateT(); }
+function startTowers() { 
+    tBet = getBet(); if(!tBet) return; 
+    updateMoney(-tBet); // SE DESCUENTA AL EMPEZAR
+    tLevel=0; tMult=1; updateT(); msg("Torre iniciada"); 
+}
 function nextLevel() {
     if(!tBet) return;
     if(Math.random() > 0.3) { tLevel++; tMult *= 1.5; updateT(); }
-    else { updateMoney(-tBet); msg("💥 ¡Cayó!"); tBet=0; }
+    else { msg("💥 ¡Cayó la torre!"); tBet = 0; }
 }
-function cashout() { if(tBet && tLevel > 0) { updateMoney(Math.floor(tBet*tMult)-tBet); msg("💰 Retirado"); tBet=0; } }
+function cashout() { 
+    if(tBet && tLevel > 0) { updateMoney(Math.floor(tBet * tMult)); msg("💰 Retirado"); tBet = 0; } 
+}
 function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
 
 function playRoulette(type) {
     let bet = getBet(); if(!bet) return;
+    updateMoney(-bet); // SE DESCUENTA AL APOSTAR
     let n = Math.floor(Math.random()*37);
     let c = n === 0 ? "verde" : (n % 2 === 1 ? "rojo" : "negro");
     document.getElementById("rNumber").innerText = n;
     document.getElementById("rColor").innerText = c.toUpperCase();
     if(type === 'numero') {
         let ch = parseInt(document.getElementById("rInput").value);
-        if(ch === n) { updateMoney(bet*35); msg("🔥 ¡PLENO!"); }
-        else { updateMoney(-bet); msg("❌ Fallaste"); }
+        if(ch === n) { updateMoney(bet*36); msg("🔥 ¡PLENO!"); }
+        else { msg("❌ Fallaste"); }
     } else {
-        if(c === type) { updateMoney(bet); msg("🎯 Ganaste!"); }
-        else { updateMoney(-bet); msg("❌ Perdiste"); }
+        if(c === type) { updateMoney(bet*2); msg("🎯 ¡Ganaste!"); }
+        else { msg("❌ Perdiste"); }
     }
+}
+
+// --- EXTRAS ---
+function crime() {
+    if(Math.random() >= 0.4) {
+        let b = Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito: +$"+b);
+    } else { updateMoney(-1000); msg("🚔 Policía: -$1000"); }
+    localStorage.setItem("c_t", Date.now() + 600000);
+    actualizarCooldowns();
+}
+function award() {
+    let p = Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono: +$"+p);
+    localStorage.setItem("a_t", Date.now() + 420000);
+    actualizarCooldowns();
+}
+
+function actualizarCooldowns() {
+    const bA = document.getElementById("btnAward"), bC = document.getElementById("btnCrime");
+    const check = (btn, key, txt) => {
+        let f = localStorage.getItem(key);
+        if(!f) return;
+        let r = Math.ceil((f - Date.now())/1000);
+        if(r > 0) {
+            btn.disabled = true;
+            btn.innerText = `${Math.floor(r/60)}:${(r%60)<10?'0':''}${r%60}`;
+            setTimeout(actualizarCooldowns, 1000);
+        } else { btn.disabled = false; btn.innerText = txt; localStorage.removeItem(key); }
+    };
+    if(bA) check(bA, "a_t", "🎁 Award");
+    if(bC) check(bC, "c_t", "🚔 Crime");
 }
 
 function resetMoney() { localStorage.clear(); location.reload(); }
 
-window.onload = () => { 
-    document.getElementById("money").innerText = money; 
-    actualizarCooldowns(); 
-};
+window.onload = () => { updateMoney(0); actualizarCooldowns(); };
 </script>
 </body>
 </html>
