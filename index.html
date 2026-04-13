@@ -1,18 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<title>🎰 Casino Pro</title>
-<style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; }
-    .overlay { background: rgba(0, 0, 0, 0.85); min-height: 100vh; padding: 20px; box-sizing: border-box; }
-    button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; min-width: 100px; }
-    button:hover { background: #e6c200; transform: scale(1.05); }
-    button:disabled { background: #555; cursor: not-allowed; transform: none; }
-    input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
-    .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-    #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
-    #result { font-weight: bold; color: gold; margin-top: 10px; min-height: 1.2em; }
-</style>
+    <meta charset="UTF-8">
+    <title>🎰 Casino Pro</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background: #1a1a1a; /* Fondo oscuro pro */
+            color: white; 
+            margin: 0;
+        }
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.85);
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        button { 
+            padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
+            border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
+            min-width: 100px;
+        }
+        button:hover { background: #e6c200; transform: scale(1.05); }
+        button:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
+
+        input { padding: 5px; width: 120px; text-align: center; border-radius: 5px; border: none; margin: 5px; }
+
+        .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+
+        #money { color: #00ff00; font-weight: bold; font-size: 1.5em; }
+        #result { font-weight: bold; color: gold; margin-top: 15px; min-height: 1.5em; font-size: 1.1em; }
+        
+        .slot-display { font-size: 2.5em; background: #333; padding: 10px; border-radius: 10px; display: inline-block; margin: 10px; }
+    </style>
 </head>
 <body>
 
@@ -35,18 +58,57 @@
     <p>Apuesta (poné "A" para todo):</p>
     <input type="text" id="bet" value="100">
 
-    <!-- Secciones de juegos (simplificadas para el ejemplo funcional) -->
-    <div id="blackjack" class="game"><h2>🃏 Blackjack</h2><p>Puntos: <span id="pScore">0</span></p><button onclick="startBJ()">Repartir</button><button onclick="stand()">Plantarse</button></div>
-    <div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes" style="font-size: 2em;">🍒 🍋 🍊</p><button onclick="spin()">Girar</button></div>
-    <div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes" style="font-size: 1.5em;">-</p><button onclick="rollDice()">Tirar</button></div>
-    <div id="towers" class="game"><h2>🏗️ Towers</h2><p>Nivel: <span id="level">0</span> | x<span id="mult">1</span></p><button onclick="startTowers()">Subir</button><button onclick="cashout()">Retirarse</button></div>
-    <div id="roulette" class="game"><h2>🎰 Ruleta</h2><input id="rInput" placeholder="0-36"><br><button onclick="playRoulette('rojo')">🔴 Rojo</button><button onclick="playRoulette('negro')">⚫ Negro</button></div>
+    <!-- BLACKJACK -->
+    <div id="blackjack" class="game">
+        <h2>🃏 Blackjack</h2>
+        <p>Tus cartas: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
+        <p>Crupier: <span id="dCards">-</span> | Puntos: <span id="dScore">0</span></p>
+        <button onclick="startBJ()">Repartir</button>
+        <button onclick="hit()">Pedir</button>
+        <button onclick="stand()">Plantarse</button>
+    </div>
+
+    <!-- SLOTS -->
+    <div id="slots" class="game">
+        <h2>🎰 Slots</h2>
+        <div id="slotRes" class="slot-display">💎 7️⃣ 💰</div><br>
+        <button onclick="spin()">Girar</button>
+    </div>
+
+    <!-- DADOS -->
+    <div id="dice" class="game">
+        <h2>🎲 Dados</h2>
+        <p id="diceRes" style="font-size: 3em;">-</p>
+        <button onclick="rollDice()">Tirar</button>
+    </div>
+
+    <!-- TOWERS -->
+    <div id="towers" class="game">
+        <h2>🏗️ Towers</h2>
+        <p>Nivel: <span id="level">0</span> | Multiplicador: x<span id="mult">1.00</span></p>
+        <button onclick="startTowers()">Empezar</button>
+        <button onclick="nextLevel()">Subir</button>
+        <button onclick="cashout()">Retirarse</button>
+    </div>
+
+    <!-- RULETA -->
+    <div id="roulette" class="game">
+        <h2>🎰 Ruleta</h2>
+        <p style="font-size: 1.5em;">🎯 Número: <span id="rNumber">-</span> | Color: <span id="rColor">-</span></p>
+        <input type="number" id="rInput" placeholder="Número 0-36"><br>
+        <button onclick="playRoulette('rojo')">🔴 Rojo</button>
+        <button onclick="playRoulette('negro')">⚫ Negro</button>
+        <button onclick="playRoulette('numero')">🎯 Pleno (x35)</button>
+    </div>
 
     <p id="result"></p>
 </div>
 
 <script>
+// --- VARIABLES Y NÚCLEO ---
 let money = parseInt(localStorage.getItem("money")) || 1000;
+let bjBet = 0, pHand = [], dHand = [];
+let tBet = 0, tLevel = 0, tMult = 1;
 
 function updateMoney(amount = 0) {
     money += amount;
@@ -60,70 +122,141 @@ function msg(t) { document.getElementById("result").innerText = t; }
 function showGame(game) {
     document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
     document.getElementById(game).style.display = 'block';
+    msg("¡Buena suerte!");
 }
 
 function getBet() {
     let input = document.getElementById("bet").value;
     let val = (input.toLowerCase() === "a") ? money : parseInt(input);
-    if (isNaN(val) || val <= 0 || val > money) { alert("Fondos insuficientes o apuesta inválida"); return null; }
+    if (isNaN(val) || val <= 0) { alert("Apuesta no válida"); return null; }
+    if (val > money) { alert("No tenés suficiente dinero"); return null; }
     return val;
 }
 
-// --- LÓGICA DE EXTRAS (Tus pedidos específicos) ---
-
+// --- EXTRAS (CRIME Y AWARD CON TIEMPO) ---
 function award() {
-    const btn = document.getElementById("btnAward");
-    // Monto entre 2000 y 5000
     let premio = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
     updateMoney(premio);
-    msg(`🎁 ¡Bono reclamado! +$${premio}`);
-    
-    iniciarCooldown(btn, 420, "🎁 Award"); // 7 minutos = 420 seg
+    msg(`🎁 ¡Bono! Ganaste $${premio}`);
+    localStorage.setItem("a_time", Date.now() + (420 * 1000)); // 7 min
+    actualizarCooldowns();
 }
 
 function crime() {
-    const btn = document.getElementById("btnCrime");
-    
-    // 40% de que salga mal (Math.random() < 0.4)
-    if (Math.random() >= 0.4) {
-        // ÉXITO: 1000 a 9000
+    if (Math.random() >= 0.4) { // 60% éxito
         let botin = Math.floor(Math.random() * (9000 - 1000 + 1)) + 1000;
         updateMoney(botin);
-        msg(`🔫 ¡Robo exitoso! Ganaste $${botin}`);
+        msg(`🔫 ¡Éxito! Robaste $${botin}`);
     } else {
-        // FALLO
-        let multa = 1000;
-        updateMoney(-multa);
-        msg(`🚔 ¡La policía te atrapó! Perdiste $${multa}`);
+        updateMoney(-1000);
+        msg("🚔 ¡La policía te agarró! Perdiste $1000");
     }
-
-    iniciarCooldown(btn, 600, "🚔 Crime"); // 10 minutos = 600 seg
+    localStorage.setItem("c_time", Date.now() + (600 * 1000)); // 10 min
+    actualizarCooldowns();
 }
 
-function iniciarCooldown(boton, segundos, textoOriginal) {
-    boton.disabled = true;
-    let restante = segundos;
-    
-    let loop = setInterval(() => {
-        let m = Math.floor(restante / 60);
-        let s = restante % 60;
-        boton.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-        restante--;
+function actualizarCooldowns() {
+    const config = [
+        { id: "btnAward", clave: "a_time", texto: "🎁 Award" },
+        { id: "btnCrime", clave: "c_time", texto: "🚔 Crime" }
+    ];
 
-        if (restante < 0) {
-            clearInterval(loop);
-            boton.disabled = false;
-            boton.innerText = textoOriginal;
+    config.forEach(item => {
+        let btn = document.getElementById(item.id);
+        let meta = localStorage.getItem(item.clave);
+        if (meta) {
+            let falta = Math.ceil((meta - Date.now()) / 1000);
+            if (falta > 0) {
+                btn.disabled = true;
+                let m = Math.floor(falta / 60), s = falta % 60;
+                btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                setTimeout(actualizarCooldowns, 1000);
+            } else {
+                btn.disabled = false;
+                btn.innerText = item.texto;
+                localStorage.removeItem(item.clave);
+            }
         }
-    }, 1000);
+    });
 }
 
-// --- LOGICA SIMPLE DE JUEGOS ---
-function spin() { let b = getBet(); if(b) { let win = Math.random() > 0.7; if(win) { updateMoney(b*5); msg("🎰 ¡GANASTE!"); } else { updateMoney(-b); msg("🎰 Perdiste"); } } }
-function rollDice() { let b = getBet(); if(b) { let d = Math.floor(Math.random()*6)+1; document.getElementById("diceRes").innerText = d; if(d > 3) { updateMoney(b); msg("🎲 Ganaste!"); } else { updateMoney(-b); msg("🎲 Perdiste"); } } }
-function resetMoney() { money = 1000; updateMoney(0); msg("Reset realizado"); }
+// --- LÓGICA DE JUEGOS ---
 
-updateMoney(0);
+function startBJ() {
+    bjBet = getBet(); if (!bjBet) return;
+    pHand = [rCard(), rCard()]; dHand = [rCard()];
+    renderBJ();
+}
+function rCard() { return Math.floor(Math.random() * 10) + 2; }
+function renderBJ() {
+    let ps = pHand.reduce((a,b)=>a+b,0);
+    document.getElementById("pCards").innerText = pHand.join(", ");
+    document.getElementById("pScore").innerText = ps;
+    document.getElementById("dCards").innerText = dHand.join(", ");
+    document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
+    if(ps > 21) { updateMoney(-bjBet); msg("💥 ¡Te pasaste!"); bjBet = 0; }
+}
+function hit() { if(bjBet) { pHand.push(rCard()); renderBJ(); } }
+function stand() {
+    if(!bjBet) return;
+    let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
+    while(ds < 17) { dHand.push(rCard()); ds = dHand.reduce((a,b)=>a+b,0); }
+    renderBJ();
+    if(ds > 21 || ps > ds) { updateMoney(bjBet); msg("🎉 ¡Ganaste!"); }
+    else if(ps === ds) msg("⚖️ Empate");
+    else { updateMoney(-bjBet); msg("❌ Perdiste"); }
+    bjBet = 0;
+}
+
+function spin() {
+    let bet = getBet(); if(!bet) return;
+    const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
+    let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
+    document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
+    if(r1 === r2 && r2 === r3) { updateMoney(bet*10); msg("👑 ¡JACKPOT!"); }
+    else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); }
+    else { updateMoney(-bet); msg("Perdiste"); }
+}
+
+function rollDice() {
+    let bet = getBet(); if(!bet) return;
+    let d = Math.floor(Math.random()*6)+1;
+    document.getElementById("diceRes").innerText = d;
+    if(d > 3) { updateMoney(bet); msg("🎲 ¡Ganaste!"); }
+    else { updateMoney(-bet); msg("🎲 Perdiste"); }
+}
+
+function startTowers() { tBet = getBet(); if(!tBet) return; tLevel=0; tMult=1; updateT(); }
+function nextLevel() {
+    if(!tBet) return;
+    if(Math.random() > 0.3) { tLevel++; tMult *= 1.5; updateT(); }
+    else { updateMoney(-tBet); msg("💥 ¡Cayó!"); tBet=0; }
+}
+function cashout() { if(tBet && tLevel > 0) { updateMoney(Math.floor(tBet*tMult)-tBet); msg("💰 Retirado"); tBet=0; } }
+function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
+
+function playRoulette(type) {
+    let bet = getBet(); if(!bet) return;
+    let n = Math.floor(Math.random()*37);
+    let c = n === 0 ? "verde" : (n % 2 === 1 ? "rojo" : "negro");
+    document.getElementById("rNumber").innerText = n;
+    document.getElementById("rColor").innerText = c.toUpperCase();
+    if(type === 'numero') {
+        let ch = parseInt(document.getElementById("rInput").value);
+        if(ch === n) { updateMoney(bet*35); msg("🔥 ¡PLENO!"); }
+        else { updateMoney(-bet); msg("❌ Fallaste"); }
+    } else {
+        if(c === type) { updateMoney(bet); msg("🎯 Ganaste!"); }
+        else { updateMoney(-bet); msg("❌ Perdiste"); }
+    }
+}
+
+function resetMoney() { localStorage.clear(); location.reload(); }
+
+window.onload = () => { 
+    document.getElementById("money").innerText = money; 
+    actualizarCooldowns(); 
+};
 </script>
 </body>
 </html>
