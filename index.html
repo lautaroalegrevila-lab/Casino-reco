@@ -7,16 +7,27 @@
     body { 
         font-family: Arial, sans-serif; 
         text-align: center; 
+        /* Fondo por defecto si no hay uno guardado */
         background: url('https://tcdn.com.br') no-repeat center center fixed; 
         background-size: cover;
         color: white; 
         margin: 0;
+        transition: background 0.5s ease;
     }
     .overlay {
         background: rgba(0, 0, 0, 0.75);
         min-height: 100vh;
         padding: 20px;
         box-sizing: border-box;
+    }
+    /* Estilo para el selector de fondo */
+    .bg-config {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: inline-block;
+        border: 1px solid gold;
     }
     button { 
         padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
@@ -34,6 +45,16 @@
 
 <div class="overlay">
     <h1>🎰 Casino Pro</h1>
+
+    <!-- PANEL DE CAMBIO DE FONDO -->
+    <div class="bg-config">
+        <span>🖼️ Fondo:</span>
+        <input type="text" id="bgInput" placeholder="Link de imagen..." style="width: 150px;">
+        <button onclick="changeBgUrl()">Aplicar Link</button>
+        <button onclick="document.getElementById('fileInput').click()">Subir Archivo</button>
+        <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="changeBgFile(this)">
+    </div>
+
     <p>💰 Dinero: <span id="money">1000</span></p>
 
     <div id="main-nav">
@@ -53,7 +74,7 @@
     <p>Apuesta (poné "A" para todo):</p>
     <input type="text" id="bet" value="100">
 
-    <!-- BLACKJACK CORREGIDO -->
+    <!-- SECCIONES DE JUEGOS -->
     <div id="blackjack" class="game">
         <h2>🃏 Blackjack</h2>
         <p>Jugador: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
@@ -63,43 +84,42 @@
         <button id="btnBJStand" onclick="stand()" disabled>Plantarse</button>
     </div>
 
-    <!-- SLOTS -->
-    <div id="slots" class="game">
-        <h2>🎰 Slots</h2>
-        <p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💰</p>
-        <button onclick="spin()">Girar</button>
-    </div>
-
-    <!-- DADOS -->
-    <div id="dice" class="game">
-        <h2>🎲 Dados</h2>
-        <p id="diceRes" style="font-size: 2em;">-</p>
-        <button onclick="rollDice()">Tirar</button>
-    </div>
-
-    <!-- TOWERS -->
-    <div id="towers" class="game">
-        <h2>🏗️ Towers</h2>
-        <p>Nivel: <span id="level">0</span> | x<span id="mult">1.00</span></p>
-        <button onclick="startTowers()">Empezar</button>
-        <button onclick="nextLevel()">Subir</button>
-        <button onclick="cashout()">Retirarse</button>
-    </div>
-
-    <!-- RULETA -->
-    <div id="roulette" class="game">
-        <h2>🎰 Ruleta</h2>
-        <p>🎯 <span id="rNumber">-</span> | <span id="rColor">-</span></p>
-        <input type="number" id="rInput" placeholder="0-36"><br>
-        <button onclick="playRoulette('rojo')">🔴 Rojo</button>
-        <button onclick="playRoulette('negro')">⚫ Negro</button>
-        <button onclick="playRoulette('numero')">🎯 Pleno</button>
-    </div>
+    <div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💰</p><button onclick="spin()">Girar</button></div>
+    <div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes" style="font-size: 2em;">-</p><button onclick="rollDice()">Tirar</button></div>
+    <div id="towers" class="game"><h2>🏗️ Towers</h2><p>Nivel: <span id="level">0</span> | x<span id="mult">1.00</span></p><button onclick="startTowers()">Empezar</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Retirarse</button></div>
+    <div id="roulette" class="game"><h2>🎰 Ruleta</h2><p>🎯 <span id="rNumber">-</span> | <span id="rColor">-</span></p><input type="number" id="rInput" placeholder="0-36"><br><button onclick="playRoulette('rojo')">🔴 Rojo</button><button onclick="playRoulette('negro')">⚫ Negro</button><button onclick="playRoulette('numero')">🎯 Pleno</button></div>
 
     <p id="result"></p>
 </div>
 
 <script>
+// --- LÓGICA DE PERSONALIZACIÓN ---
+function changeBgUrl() {
+    let url = document.getElementById('bgInput').value;
+    if(url) {
+        document.body.style.backgroundImage = `url('${url}')`;
+        localStorage.setItem("user_bg", url);
+    }
+}
+
+function changeBgFile(input) {
+    if (input.files && input.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            document.body.style.backgroundImage = `url('${e.target.result}')`;
+            localStorage.setItem("user_bg", e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function loadSettings() {
+    let savedBg = localStorage.getItem("user_bg");
+    if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+    document.getElementById("money").innerText = money;
+}
+
+// --- LÓGICA DE JUEGOS ---
 let money = parseInt(localStorage.getItem("money")) || 1000;
 let bjBet = 0, pHand = [], dHand = [];
 let tBet = 0, tLevel = 0, tMult = 1;
@@ -126,53 +146,28 @@ function getBet() {
     return val;
 }
 
-// --- BLACKJACK CON BLOQUEO DE BOTÓN ---
+// BLACKJACK
 function startBJ() {
-    let bet = getBet(); 
-    if(!bet) return;
-    
-    bjBet = bet;
-    updateMoney(-bjBet); // Descuento inmediato
-    
-    // Bloquear controles
+    let bet = getBet(); if(!bet) return;
+    bjBet = bet; updateMoney(-bjBet);
     document.getElementById("btnBJStart").disabled = true;
     document.getElementById("btnBJHit").disabled = false;
     document.getElementById("btnBJStand").disabled = false;
-    document.getElementById("bet").disabled = true;
-
-    pHand = [rCard(), rCard()]; 
-    dHand = [rCard()];
-    
+    pHand = [rCard(), rCard()]; dHand = [rCard()];
     let ps = pHand.reduce((a,b)=>a+b,0);
     updateBJ();
-
-    if (ps === 21) {
-        updateMoney(bjBet * 3); // Gana x2 + recupera apuesta
-        msg("🃏 ¡BLACKJACK NATURAL! Ganaste x2");
-        endBJ();
-    } else {
-        msg("¿Pedir o Plantarse?");
-    }
+    if (ps === 21) { updateMoney(bjBet * 3); msg("🃏 ¡BLACKJACK NATURAL! Ganaste x2"); endBJ(); }
 }
-
 function rCard() { return Math.floor(Math.random() * 10) + 2; }
-
 function updateBJ() {
     let ps = pHand.reduce((a,b)=>a+b,0);
     document.getElementById("pCards").innerText = pHand.join(", ");
     document.getElementById("pScore").innerText = ps;
     document.getElementById("dCards").innerText = dHand.join(", ");
     document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
-    if(ps > 21) { 
-        msg("💥 ¡Te pasaste!"); 
-        endBJ(); 
-    }
+    if(ps > 21) { msg("💥 ¡Te pasaste!"); endBJ(); }
 }
-
-function hit() { 
-    if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } 
-}
-
+function hit() { if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } }
 function stand() {
     if(bjBet <= 0) return;
     let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
@@ -183,19 +178,11 @@ function stand() {
     else { msg("❌ Perdiste"); }
     endBJ();
 }
+function endBJ() { bjBet = 0; document.getElementById("btnBJStart").disabled = false; document.getElementById("btnBJHit").disabled = true; document.getElementById("btnBJStand").disabled = true; }
 
-function endBJ() {
-    bjBet = 0;
-    document.getElementById("btnBJStart").disabled = false;
-    document.getElementById("btnBJHit").disabled = true;
-    document.getElementById("btnBJStand").disabled = true;
-    document.getElementById("bet").disabled = false;
-}
-
-// --- OTROS JUEGOS ---
+// OTROS JUEGOS
 function spin() {
-    let bet = getBet(); if(!bet) return;
-    updateMoney(-bet);
+    let bet = getBet(); if(!bet) return; updateMoney(-bet);
     const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
     let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
     document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
@@ -203,36 +190,26 @@ function spin() {
     else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); }
     else msg("Perdiste");
 }
-
 function rollDice() {
-    let bet = getBet(); if(!bet) return;
-    updateMoney(-bet);
-    let d = Math.floor(Math.random()*6)+1;
-    document.getElementById("diceRes").innerText = d;
-    if(d > 3) { updateMoney(bet*2); msg("🎲 Ganaste"); }
-    else msg("🎲 Perdiste");
+    let bet = getBet(); if(!bet) return; updateMoney(-bet);
+    let d = Math.floor(Math.random()*6)+1; document.getElementById("diceRes").innerText = d;
+    if(d > 3) { updateMoney(bet*2); msg("🎲 Ganaste"); } else msg("🎲 Perdiste");
 }
-
 function startTowers() { let b=getBet(); if(!b) return; updateMoney(-b); tBet=b; tLevel=0; tMult=1; updateT(); }
 function nextLevel() { if(!tBet) return; if(Math.random()>0.3){ tLevel++; tMult*=1.5; updateT(); }else{ msg("💥 Caíste"); tBet=0; } }
 function cashout() { if(tBet && tLevel>0){ updateMoney(Math.floor(tBet*tMult)); tBet=0; msg("💰 Cobrado"); } }
 function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
-
 function playRoulette(type) {
-    let bet = getBet(); if(!bet) return;
-    updateMoney(-bet);
+    let bet = getBet(); if(!bet) return; updateMoney(-bet);
     let n = Math.floor(Math.random()*37), c = n===0?"verde":(n%2===1?"rojo":"negro");
-    document.getElementById("rNumber").innerText = n;
-    document.getElementById("rColor").innerText = c.toUpperCase();
+    document.getElementById("rNumber").innerText = n; document.getElementById("rColor").innerText = c.toUpperCase();
     if(type==='numero'){
         let ch=parseInt(document.getElementById("rInput").value);
         if(ch===n){ updateMoney(bet*36); msg("🔥 PLENO!"); } else msg("❌ Fallaste");
-    } else {
-        if(c===type){ updateMoney(bet*2); msg("🎯 Ganaste"); } else msg("❌ Perdiste");
-    }
+    } else { if(c===type){ updateMoney(bet*2); msg("🎯 Ganaste"); } else msg("❌ Perdiste"); }
 }
 
-// --- EXTRAS ---
+// EXTRAS
 function crime() {
     if(Math.random()>=0.4){ let b=Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito +$"+b); }
     else { updateMoney(-1000); msg("🚔 Policía -$1000"); }
@@ -242,7 +219,6 @@ function award() {
     let p=Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono +$"+p);
     localStorage.setItem("a_t", Date.now()+420000); actualizarCooldowns();
 }
-
 function actualizarCooldowns() {
     const bA=document.getElementById("btnAward"), bC=document.getElementById("btnCrime");
     const check=(btn,k,t)=>{
@@ -255,7 +231,8 @@ function actualizarCooldowns() {
 }
 
 function resetMoney() { localStorage.clear(); location.reload(); }
-window.onload = () => { updateMoney(0); actualizarCooldowns(); };
+
+window.onload = () => { loadSettings(); actualizarCooldowns(); };
 </script>
 </body>
 </html>
