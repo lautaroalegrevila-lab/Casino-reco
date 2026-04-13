@@ -1,21 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Casino Pro 🎰</title>
+<title>🎰 Casino Pro</title>
 
 <style>
 body { 
     font-family: Arial, sans-serif; 
     text-align: center; 
-    /* Imagen de fondo de mesa de póker */
     background: url('https://tcdn.com.br') no-repeat center center fixed; 
     background-size: cover;
     color: white; 
     margin: 0;
 }
 
-/* Capa de oscuridad para legibilidad */
+/* Overlay */
 .overlay {
     background: rgba(0, 0, 0, 0.75);
     min-height: 100vh;
@@ -28,8 +26,11 @@ button {
     border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
 }
 button:hover { background: #e6c200; transform: scale(1.05); }
+
 input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
+
 .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+
 #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
 #result { font-weight: bold; color: gold; margin-top: 10px; }
 </style>
@@ -46,6 +47,7 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
     <button onclick="showGame('slots')">🎰 Slots</button>
     <button onclick="showGame('dice')">🎲 Dados</button>
     <button onclick="showGame('towers')">🏗️ Towers</button>
+    <button onclick="showGame('roulette')">🎰 Ruleta</button>
     <button onclick="showGame('leaderboard')">🏆 Ranking</button>
 
     <h3>Extras</h3>
@@ -89,6 +91,26 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
         <button onclick="cashout()">Retirarse</button>
     </div>
 
+    <!-- RULETA -->
+    <div id="roulette" class="game">
+        <h2>🎰 Ruleta</h2>
+
+        <p style="font-size:1.5em;">
+            🎯 Número: <span id="rNumber">-</span>
+        </p>
+        <p>
+            🎨 Color: <span id="rColor">-</span>
+        </p>
+
+        <input id="rInput" placeholder="0-36">
+
+        <br><br>
+
+        <button onclick="playRoulette('rojo')">🔴 Rojo</button>
+        <button onclick="playRoulette('negro')">⚫ Negro</button>
+        <button onclick="playRoulette('numero')">🎯 Número</button>
+    </div>
+
     <!-- LEADERBOARD -->
     <div id="leaderboard" class="game">
         <h2>🏆 Ranking</h2>
@@ -101,12 +123,11 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
 </div>
 
 <script>
-// DINERO CON PROTECCIÓN DE NEGATIVOS
 let money = parseInt(localStorage.getItem("money")) || 0;
 
 function updateMoney(amount = 0) {
   money += amount;
-  if (money < 0) money = 0; // Evita saldo negativo
+  if (money < 0) money = 0;
   localStorage.setItem("money", money);
   document.getElementById("money").innerText = money;
 }
@@ -131,157 +152,41 @@ function getBet(){
   return bet;
 }
 
-// BLACKJACK CON FIX DE REPARTO
-let player=[], dealer=[], bjActive=false;
+// RULETA
+function playRoulette(type){
+  let bet = getBet(); 
+  if(!bet) return;
 
-function card(){
-  let c=[2,3,4,5,6,7,8,9,10,10,10,10,11];
-  return c[Math.floor(Math.random()*c.length)];
-}
+  let number = Math.floor(Math.random()*37);
+  let isRed = number % 2 === 1;
+  let color = number === 0 ? "verde" : (isRed ? "rojo" : "negro");
 
-function score(hand){
-  let s=hand.reduce((a,b)=>a+b,0);
-  let aces=hand.filter(x=>x===11).length;
-  while(s>21 && aces>0){s-=10; aces--;}
-  return s;
-}
+  document.getElementById("rNumber").innerText = number;
+  document.getElementById("rColor").innerText = color;
 
-function startBJ(){
-  if(bjActive) return msg("⚠️ Ya hay una partida. Terminala.");
-  let bet=getBet(); if(!bet) return;
-  player=[card(),card()];
-  dealer=[card(),card()];
-  bjActive=true;
-  updateBJ();
-  msg("🃏 Cartas repartidas...");
-}
-
-function hit(){
-  if(!bjActive) return;
-  player.push(card());
-  if(score(player)>21) endBJ();
-  updateBJ();
-}
-
-function stand(){
-  if(!bjActive) return;
-  while(score(dealer)<17) dealer.push(card());
-  endBJ();
-}
-
-function endBJ(){
-  bjActive = false;
-  let bet=getBet();
-  let p=score(player), d=score(dealer);
-
-  if(p>21){ updateMoney(-bet); msg("💀 Perdiste"); }
-  else if(d>21||p>d){ updateMoney(bet); msg("🔥 Ganaste"); }
-  else if(p<d){ updateMoney(-bet); msg("❌ Perdiste"); }
-  else msg("🤝 Empate");
-
-  updateBJ();
-}
-
-function updateBJ(){
-  document.getElementById("pCards").innerText=player.join(" ");
-  document.getElementById("dCards").innerText= bjActive ? dealer[0] + " ?" : dealer.join(" ");
-  document.getElementById("pScore").innerText=score(player);
-  document.getElementById("dScore").innerText= bjActive ? "?" : score(dealer);
-}
-
-// SLOTS
-function spin(){
-  let bet=getBet(); if(!bet) return;
-  let s=["🍒","🍋","🍊","⭐","💎"];
-  let a=s[rand()],b=s[rand()],c=s[rand()];
-  document.getElementById("slotRes").innerText=`${a} ${b} ${c}`;
-  if(a===b && b===c){ updateMoney(bet*3); msg("🔥 Jackpot"); }
-  else { updateMoney(-bet); msg("❌ Perdiste"); }
-}
-
-// DADOS
-function rollDice(){
-  let bet=getBet(); if(!bet) return;
-  let d1=rand6(), d2=rand6();
-  let total=d1+d2;
-  document.getElementById("diceRes").innerText=`${d1}+${d2}=${total}`;
-  if(total>=7){ updateMoney(bet); msg("🔥 Ganaste"); }
-  else { updateMoney(-bet); msg("❌ Perdiste"); }
-}
-
-// TOWERS
-let tLevel=0, mult=1, playingT=false;
-function startTowers(){
-  if(!getBet()) return;
-  tLevel=0; mult=1; playingT=true;
-  updateTowers();
-  msg("🏗️ Empezaste Towers");
-}
-
-function nextLevel(){
-  if(!playingT) return;
-  if(Math.random()<0.3){
-    updateMoney(-getBet());
-    playingT=false; msg("💣 BOOM");
-  } else {
-    tLevel++; mult++; msg("✅ Piso seguro");
+  if(type === "rojo"){
+    color === "rojo" ? updateMoney(bet) : updateMoney(-bet);
   }
-  updateTowers();
+  else if(type === "negro"){
+    color === "negro" ? updateMoney(bet) : updateMoney(-bet);
+  }
+  else if(type === "numero"){
+    let choice = parseInt(document.getElementById("rInput").value);
+    if(isNaN(choice) || choice < 0 || choice > 36){
+      return msg("⚠️ Número inválido");
+    }
+    choice === number ? updateMoney(bet*35) : updateMoney(-bet);
+  }
+
+  msg("🎰 Salió " + number + " (" + color + ")");
 }
 
-function cashout(){
-  if(!playingT) return;
-  let win = Math.floor(getBet() * (mult - 1));
-  updateMoney(win);
-  playingT=false;
-  msg("💰 Retiraste +" + win);
-  updateTowers();
-}
-
-function updateTowers(){
-  document.getElementById("level").innerText=tLevel;
-  document.getElementById("mult").innerText=mult;
-}
-
-// EXTRAS
-function crime(){
-  let now = Date.now(), last = localStorage.getItem("lastCrime") || 0;
-  if(now - last < 600000) return msg("⏳ Esperá 10 min");
-  localStorage.setItem("lastCrime", now);
-  if(Math.random()<0.4){ updateMoney(-2000); msg("🚔 Fallaste -2000"); }
-  else { updateMoney(6000); msg("💰 Éxito +6000"); }
-}
-
-function award(){
-  let now=Date.now(), last=localStorage.getItem("lastAward")||0;
-  if(now-last<420000) return msg("⏳ Esperá 7 min");
-  localStorage.setItem("lastAward", now);
-  updateMoney(2000); msg("🎁 +2000");
-}
-
-// UTILIDADES
+// UTIL
 function rand(){return Math.floor(Math.random()*5);}
 function rand6(){return Math.floor(Math.random()*6)+1;}
 function msg(t){ document.getElementById("result").innerText=t; }
 
-// RANKING
-function saveScore(){
-  let name=document.getElementById("playerName").value||"Anon";
-  let scores=JSON.parse(localStorage.getItem("scores"))||[];
-  scores.push({name,money});
-  scores.sort((a,b)=>b.money-a.money);
-  localStorage.setItem("scores",JSON.stringify(scores.slice(0,5)));
-  showScores();
-}
-
-function showScores(){
-  let scores=JSON.parse(localStorage.getItem("scores"))||[];
-  let list=document.getElementById("scores");
-  list.innerHTML = scores.map(s => `<li>${s.name} - 💰 ${s.money}</li>`).join("");
-}
-
 updateMoney();
-showScores();
 </script>
 
 </body>
