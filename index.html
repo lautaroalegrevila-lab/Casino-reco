@@ -24,6 +24,10 @@ input { padding: 5px; width: 80px; text-align: center; }
 <button onclick="showGame('towers')">🏗️ Towers</button>
 <button onclick="showGame('leaderboard')">🏆 Ranking</button>
 
+<h3>Extras</h3>
+<button onclick="crime()">🚔 Crime</button>
+<button onclick="award()">🎁 Award</button>
+
 <p>Apuesta: <input type="number" id="bet" value="100"></p>
 
 <!-- BLACKJACK -->
@@ -216,6 +220,38 @@ function updateTowers(){
   document.getElementById("mult").innerText=mult;
 }
 
+// ---------------- CRIME ----------------
+function crime(){
+  if(Math.random()<0.4){
+    money-=2000;
+    msg("🚔 Fallaste -2000");
+  } else {
+    let win=Math.floor(Math.random()*(9000-5000+1))+5000;
+    money+=win;
+    msg("💰 Ganaste "+win);
+  }
+  updateMoney();
+}
+
+// ---------------- AWARD ----------------
+function award(){
+  let now=Date.now();
+  let last=localStorage.getItem("lastAward")||0;
+  let cooldown=7*60*1000;
+
+  if(now-last<cooldown){
+    let t=Math.ceil((cooldown-(now-last))/1000);
+    msg("⏳ Esperá "+t+"s");
+    return;
+  }
+
+  money+=2000;
+  localStorage.setItem("lastAward", now);
+
+  msg("🎁 +2000");
+  updateMoney();
+}
+
 // ---------------- LEADERBOARD ----------------
 function saveScore(){
   let name=document.getElementById("playerName").value||"Anon";
@@ -241,7 +277,7 @@ function showScores(){
   });
 }
 
-// ---------------- UTIL ----------------
+// UTIL
 function rand(){return Math.floor(Math.random()*5);}
 function rand6(){return Math.floor(Math.random()*6)+1;}
 
