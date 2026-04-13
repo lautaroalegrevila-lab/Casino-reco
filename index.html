@@ -7,15 +7,14 @@
 body { 
     font-family: Arial, sans-serif; 
     text-align: center; 
-    background: url('https://tcdn.com.br') no-repeat center center fixed; 
+    background: #1a1a1a; 
     background-size: cover;
     color: white; 
     margin: 0;
 }
 
-/* Overlay */
 .overlay {
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     min-height: 100vh;
     padding: 20px;
     box-sizing: border-box;
@@ -32,7 +31,7 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
 .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
 
 #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
-#result { font-weight: bold; color: gold; margin-top: 10px; }
+#result { font-weight: bold; color: gold; margin-top: 10px; min-height: 1.2em; }
 </style>
 
 </head>
@@ -40,7 +39,7 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
 
 <div class="overlay">
     <h1>🎰 Casino Pro</h1>
-    <p>💰 Dinero: <span id="money">0</span></p>
+    <p>💰 Dinero: <span id="money">1000</span></p>
 
     <h3>Juegos</h3>
     <button onclick="showGame('blackjack')">🃏 Blackjack</button>
@@ -61,8 +60,8 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
     <!-- BLACKJACK -->
     <div id="blackjack" class="game">
         <h2>🃏 Blackjack</h2>
-        <p>Jugador: <span id="pCards"></span> | Puntos: <span id="pScore"></span></p>
-        <p>Crupier: <span id="dCards"></span> | Puntos: <span id="dScore"></span></p>
+        <p>Jugador: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
+        <p>Crupier: <span id="dCards">-</span> | Puntos: <span id="dScore">0</span></p>
         <button onclick="startBJ()">Repartir</button>
         <button onclick="hit()">Pedir</button>
         <button onclick="stand()">Plantarse</button>
@@ -94,18 +93,10 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
     <!-- RULETA -->
     <div id="roulette" class="game">
         <h2>🎰 Ruleta</h2>
-
-        <p style="font-size:1.5em;">
-            🎯 Número: <span id="rNumber">-</span>
-        </p>
-        <p>
-            🎨 Color: <span id="rColor">-</span>
-        </p>
-
+        <p style="font-size:1.5em;">🎯 Número: <span id="rNumber">-</span></p>
+        <p>🎨 Color: <span id="rColor">-</span></p>
         <input id="rInput" placeholder="0-36">
-
         <br><br>
-
         <button onclick="playRoulette('rojo')">🔴 Rojo</button>
         <button onclick="playRoulette('negro')">⚫ Negro</button>
         <button onclick="playRoulette('numero')">🎯 Número</button>
@@ -123,7 +114,9 @@ input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; bord
 </div>
 
 <script>
-let money = parseInt(localStorage.getItem("money")) || 0;
+let money = parseInt(localStorage.getItem("money")) || 1000;
+let bjBet = 0, pHand = [], dHand = [];
+let tBet = 0, tLevel = 0, tMult = 1;
 
 function updateMoney(amount = 0) {
   money += amount;
@@ -133,9 +126,9 @@ function updateMoney(amount = 0) {
 }
 
 function resetMoney(){
-  money = 0;
+  money = 1000;
   updateMoney();
-  msg("💥 Dinero reiniciado");
+  msg("💥 Dinero reiniciado a 1000");
 }
 
 function showGame(game){
@@ -145,49 +138,125 @@ function showGame(game){
 
 function getBet(){
   let input = document.getElementById("bet").value;
-  if(input.toLowerCase() === "a") return money;
-  let bet = parseInt(input);
+  let bet = (input.toLowerCase() === "a") ? money : parseInt(input);
   if(isNaN(bet) || bet <= 0){ alert("Apuesta inválida"); return null; }
   if(bet > money){ alert("No tenés suficiente dinero"); return null; }
   return bet;
 }
 
-// RULETA
+function msg(t){ document.getElementById("result").innerText=t; }
+
+// --- BLACKJACK ---
+function startBJ() {
+    bjBet = getBet(); if(!bjBet) return;
+    pHand = [randCard(), randCard()];
+    dHand = [randCard()];
+    updateBJ();
+    msg("¡Suerte en Blackjack!");
+}
+function randCard() { return Math.floor(Math.random() * 10) + 2; }
+function updateBJ() {
+    let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
+    document.getElementById("pCards").innerText = pHand.join(", ");
+    document.getElementById("pScore").innerText = ps;
+    document.getElementById("dCards").innerText = dHand.join(", ");
+    document.getElementById("dScore").innerText = ds;
+    if(ps > 21) { msg("💥 Te pasaste!"); updateMoney(-bjBet); bjBet=0; }
+}
+function hit() { if(bjBet) { pHand.push(randCard()); updateBJ(); } }
+function stand() {
+    if(!bjBet) return;
+    let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
+    while(ds < 17) { dHand.push(randCard()); ds = dHand.reduce((a,b)=>a+b,0); }
+    updateBJ();
+    if(ds > 21 || ps > ds) { msg("🎉 Ganaste!"); updateMoney(bjBet); }
+    else if(ps === ds) { msg("⚖️ Empate"); }
+    else { msg("❌ Perdiste"); updateMoney(-bjBet); }
+    bjBet = 0;
+}
+
+// --- SLOTS ---
+function spin() {
+    let bet = getBet(); if(!bet) return;
+    const icons = ["🍒", "🍋", "🍊", "🔔", "💎"];
+    let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
+    document.getElementById("slotRes").innerText = r1 + " " + r2 + " " + r3;
+    if(r1===r2 && r2===r3) { updateMoney(bet*10); msg("💎 x10!"); }
+    else if(r1===r2 || r2===r3 || r1===r3) { updateMoney(bet*2); msg("💵 x2!"); }
+    else { updateMoney(-bet); msg("Perdiste"); }
+}
+
+// --- DADOS ---
+function rollDice() {
+    let bet = getBet(); if(!bet) return;
+    let d = Math.floor(Math.random()*6)+1;
+    document.getElementById("diceRes").innerText = d;
+    if(d > 3) { updateMoney(bet); msg("🎲 Ganaste!"); }
+    else { updateMoney(-bet); msg("🎲 Perdiste"); }
+}
+
+// --- TOWERS ---
+function startTowers() {
+    tBet = getBet(); if(!tBet) return;
+    tLevel = 0; tMult = 1;
+    updateTowersUI();
+    msg("🏗️ ¡Subí la torre!");
+}
+function nextLevel() {
+    if(!tBet) return;
+    if(Math.random() > 0.3) { tLevel++; tMult *= 1.5; updateTowersUI(); }
+    else { updateMoney(-tBet); msg("💥 Cayó!"); tBet=0; tLevel=0; tMult=1; updateTowersUI(); }
+}
+function cashout() {
+    if(tBet && tLevel > 0) {
+        updateMoney(Math.floor(tBet * tMult) - tBet);
+        msg("💰 Te llevaste x" + tMult.toFixed(2));
+        tBet=0; tLevel=0; tMult=1; updateTowersUI();
+    }
+}
+function updateTowersUI() {
+    document.getElementById("level").innerText = tLevel;
+    document.getElementById("mult").innerText = tMult.toFixed(2);
+}
+
+// --- RULETA ---
 function playRoulette(type){
-  let bet = getBet(); 
-  if(!bet) return;
-
+  let bet = getBet(); if(!bet) return;
   let number = Math.floor(Math.random()*37);
-  let isRed = number % 2 === 1;
-  let color = number === 0 ? "verde" : (isRed ? "rojo" : "negro");
-
+  let color = number === 0 ? "verde" : (number % 2 === 1 ? "rojo" : "negro");
   document.getElementById("rNumber").innerText = number;
   document.getElementById("rColor").innerText = color;
-
-  if(type === "rojo"){
-    color === "rojo" ? updateMoney(bet) : updateMoney(-bet);
-  }
-  else if(type === "negro"){
-    color === "negro" ? updateMoney(bet) : updateMoney(-bet);
-  }
+  if(type === "rojo") color === "rojo" ? updateMoney(bet) : updateMoney(-bet);
+  else if(type === "negro") color === "negro" ? updateMoney(bet) : updateMoney(-bet);
   else if(type === "numero"){
     let choice = parseInt(document.getElementById("rInput").value);
-    if(isNaN(choice) || choice < 0 || choice > 36){
-      return msg("⚠️ Número inválido");
-    }
     choice === number ? updateMoney(bet*35) : updateMoney(-bet);
   }
-
   msg("🎰 Salió " + number + " (" + color + ")");
 }
 
-// UTIL
-function rand(){return Math.floor(Math.random()*5);}
-function rand6(){return Math.floor(Math.random()*6)+1;}
-function msg(t){ document.getElementById("result").innerText=t; }
+// --- EXTRAS ---
+function crime() {
+    if(Math.random() > 0.5) { let g = 500; updateMoney(g); msg("🔫 Robo exitoso +"+g); }
+    else { let p = 200; updateMoney(-p); msg("🚔 Preso -"+p); }
+}
+function award() { updateMoney(100); msg("🎁 Bono +100"); }
 
-updateMoney();
+function saveScore() {
+    let name = document.getElementById("playerName").value || "Anónimo";
+    let scores = JSON.parse(localStorage.getItem("ranking")) || [];
+    scores.push({name, money});
+    scores.sort((a,b) => b.money - a.money);
+    localStorage.setItem("ranking", JSON.stringify(scores.slice(0,5)));
+    renderScores();
+}
+function renderScores() {
+    let scores = JSON.parse(localStorage.getItem("ranking")) || [];
+    document.getElementById("scores").innerHTML = scores.map(s => `<li>${s.name}: $${s.money}</li>`).join("");
+}
+
+updateMoney(0);
+renderScores();
 </script>
-
 </body>
 </html>
