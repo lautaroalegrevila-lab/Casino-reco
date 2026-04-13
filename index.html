@@ -4,40 +4,16 @@
 <meta charset="UTF-8">
 <title>🎰 Casino Pro</title>
 <style>
-    body { 
-        font-family: Arial, sans-serif; 
-        text-align: center; 
-        background: url('https://tcdn.com.br') no-repeat center center fixed; 
-        background-size: cover;
-        color: white; 
-        margin: 0;
-        transition: background 0.5s ease;
-    }
-    .overlay {
-        background: rgba(0, 0, 0, 0.75);
-        min-height: 100vh;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-    .bg-config {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        display: inline-block;
-        border: 1px solid gold;
-    }
-    button { 
-        padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
-        border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; background: url('https://tcdn.com.br') no-repeat center center fixed; background-size: cover; color: white; margin: 0; transition: background 0.5s ease; }
+    .overlay { background: rgba(0, 0, 0, 0.75); min-height: 100vh; padding: 20px; box-sizing: border-box; }
+    .bg-config { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px; display: inline-block; border: 1px solid gold; }
+    button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
     button:hover { background: #e6c200; transform: scale(1.05); }
     button:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
     input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
     .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
     #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
     #result { font-weight: bold; color: gold; margin-top: 10px; min-height: 1.2em; }
-    .bullet-indicator { font-size: 1.5em; color: red; }
 </style>
 </head>
 <body>
@@ -47,7 +23,7 @@
 
     <div class="bg-config">
         <span>🖼️ Fondo:</span>
-        <input type="text" id="bgInput" placeholder="Link de imagen..." style="width: 150px;">
+        <input type="text" id="bgInput" placeholder="Link de imagen...">
         <button onclick="changeBgUrl()">Aplicar</button>
         <button onclick="document.getElementById('fileInput').click()">Subir</button>
         <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="changeBgFile(this)">
@@ -61,10 +37,12 @@
         <button onclick="showGame('slots')">🎰 Slots</button>
         <button onclick="showGame('dice')">🎲 Dados</button>
         <button onclick="showGame('russian')">🔫 Ruleta Rusa</button>
+        <button onclick="showGame('towers')">🏗️ Towers</button>
         <button onclick="showGame('roulette')">🎰 Ruleta</button>
     </div>
 
     <h3>Extras</h3>
+    <button id="btnDaily" onclick="daily()" style="background: #00ff00; color: black;">⭐ DAILY $10k</button>
     <button id="btnCrime" onclick="crime()">🚔 Crime</button>
     <button id="btnAward" onclick="award()">🎁 Award</button>
     <button onclick="resetMoney()">💥 Reset</button>
@@ -72,52 +50,38 @@
     <p>Apuesta (poné "A" para todo):</p>
     <input type="text" id="bet" value="100">
 
-    <!-- RULETA RUSA -->
+    <!-- SECCIONES DE JUEGOS -->
     <div id="russian" class="game">
         <h2>🔫 Ruleta Rusa</h2>
-        <p>Balas en el tambor: <span id="bulletCount" class="bullet-indicator">1</span> / 6</p>
-        <p>Multiplicador actual: <span id="rrMult" style="color:lawngreen">x1.20</span></p>
-        <button onclick="addBullet()">➕ Agregar Bala</button>
-        <button onclick="removeBullet()">➖ Quitar Bala</button>
-        <br><br>
-        <button onclick="playRussian()" style="background: red; color: white;">💥 APRETAR GATILLO</button>
+        <p>Balas: <span id="bulletCount" style="color:red">1</span> / 6 | Premio: <span id="rrMult" style="color:lawngreen">x1.20</span></p>
+        <button onclick="addBullet()">➕ Bala</button><button onclick="removeBullet()">➖ Quitar</button><br><br>
+        <button onclick="playRussian()" style="background: red; color: white;">💥 GATILLO</button>
     </div>
 
-    <!-- BLACKJACK -->
+    <div id="towers" class="game">
+        <h2>🏗️ Towers</h2>
+        <p>Nivel: <span id="level">0</span> | x<span id="mult">1.00</span></p>
+        <button onclick="startTowers()">Empezar</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Retirarse</button>
+    </div>
+
     <div id="blackjack" class="game">
         <h2>🃏 Blackjack</h2>
         <p>Jugador: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
         <p>Crupier: <span id="dCards">-</span> | Puntos: <span id="dScore">0</span></p>
-        <button id="btnBJStart" onclick="startBJ()">Repartir</button>
-        <button id="btnBJHit" onclick="hit()" disabled>Pedir</button>
-        <button id="btnBJStand" onclick="stand()" disabled>Plantarse</button>
+        <button id="btnBJStart" onclick="startBJ()">Repartir</button><button id="btnBJHit" onclick="hit()" disabled>Pedir</button><button id="btnBJStand" onclick="stand()" disabled>Plantarse</button>
     </div>
 
     <div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💰</p><button onclick="spin()">Girar</button></div>
     <div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes" style="font-size: 2em;">-</p><button onclick="rollDice()">Tirar</button></div>
-    <div id="towers" class="game"><h2>🏗️ Towers</h2><p>Nivel: <span id="level">0</span> | x<span id="mult">1.00</span></p><button onclick="startTowers()">Empezar</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Retirarse</button></div>
     <div id="roulette" class="game"><h2>🎰 Ruleta</h2><p>🎯 <span id="rNumber">-</span> | <span id="rColor">-</span></p><input type="number" id="rInput" placeholder="0-36"><br><button onclick="playRoulette('rojo')">🔴 Rojo</button><button onclick="playRoulette('negro')">⚫ Negro</button><button onclick="playRoulette('numero')">🎯 Pleno</button></div>
 
     <p id="result"></p>
 </div>
 
 <script>
-// --- PERSONALIZACIÓN ---
-function changeBgUrl() {
-    let url = document.getElementById('bgInput').value;
-    if(url) { document.body.style.backgroundImage = `url('${url}')`; localStorage.setItem("user_bg", url); }
-}
-function changeBgFile(input) {
-    if (input.files && input.files[0]) {
-        let reader = new FileReader();
-        reader.onload = (e) => { document.body.style.backgroundImage = `url('${e.target.result}')`; localStorage.setItem("user_bg", e.target.result); };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// --- LÓGICA DE JUEGOS ---
 let money = parseInt(localStorage.getItem("money")) || 1000;
 let bjBet = 0, pHand = [], dHand = [];
+let tBet = 0, tLevel = 0, tMult = 1;
 let rrBullets = 1;
 
 function updateMoney(amount = 0) {
@@ -126,12 +90,15 @@ function updateMoney(amount = 0) {
     localStorage.setItem("money", money);
     document.getElementById("money").innerText = money;
 }
+
 function msg(t) { document.getElementById("result").innerText = t; }
+
 function showGame(game) {
-    if(bjBet > 0) { alert("Terminá el Blackjack"); return; }
+    if(bjBet > 0 || tBet > 0) { alert("Terminá la partida actual"); return; }
     document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
     document.getElementById(game).style.display = 'block';
 }
+
 function getBet() {
     let input = document.getElementById("bet").value;
     let val = (input.toLowerCase() === "a") ? money : parseInt(input);
@@ -139,50 +106,74 @@ function getBet() {
     return val;
 }
 
-// --- RULETA RUSA (NUEVO) ---
+// --- NUEVO DAILY $10.000 ---
+function daily() {
+    updateMoney(10000);
+    msg("⭐ ¡Reclamaste tus $10.000 diarios!");
+    localStorage.setItem("d_t", Date.now() + 86400000); // 24 horas
+    actualizarCooldowns();
+}
+
+// --- OTROS EXTRAS ---
+function crime() {
+    if(Math.random()>=0.4){ let b=Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito +$"+b); } 
+    else { updateMoney(-1000); msg("🚔 Policía -$1000"); }
+    localStorage.setItem("c_t", Date.now()+600000); actualizarCooldowns();
+}
+function award() {
+    let p=Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono +$"+p);
+    localStorage.setItem("a_t", Date.now()+420000); actualizarCooldowns();
+}
+
+function actualizarCooldowns() {
+    const config = [
+        { id: "btnDaily", clave: "d_t", texto: "⭐ DAILY $10k" },
+        { id: "btnAward", clave: "a_t", texto: "🎁 Award" },
+        { id: "btnCrime", clave: "c_t", texto: "🚔 Crime" }
+    ];
+    config.forEach(item => {
+        let btn = document.getElementById(item.id);
+        let meta = localStorage.getItem(item.clave);
+        if (meta) {
+            let r = Math.ceil((meta - Date.now()) / 1000);
+            if (r > 0) {
+                btn.disabled = true;
+                let h = Math.floor(r / 3600), m = Math.floor((r % 3600) / 60), s = r % 60;
+                btn.innerText = (h > 0 ? h + "h " : "") + m + ":" + (s < 10 ? '0' : '') + s;
+                setTimeout(actualizarCooldowns, 1000);
+            } else { btn.disabled = false; btn.innerText = item.texto; localStorage.removeItem(item.clave); }
+        }
+    });
+}
+
+// --- JUEGOS (Ruleta Rusa, Towers, Blackjack, etc) ---
 function addBullet() { if(rrBullets < 5) { rrBullets++; updateRR(); } }
 function removeBullet() { if(rrBullets > 1) { rrBullets--; updateRR(); } }
 function updateRR() {
     document.getElementById("bulletCount").innerText = rrBullets;
-    // Multiplicadores: 1b=x1.2, 2b=x1.5, 3b=x2, 4b=x3, 5b=x5
     let mults = [0, 1.2, 1.5, 2.0, 3.0, 5.0];
     document.getElementById("rrMult").innerText = "x" + mults[rrBullets].toFixed(2);
 }
 function playRussian() {
-    let bet = getBet(); if(!bet) return;
-    updateMoney(-bet);
-    
-    // Probabilidad: si sale un número menor o igual a las balas, perdés
-    let shot = Math.floor(Math.random() * 6) + 1;
-    let mults = [0, 1.2, 1.5, 2.0, 3.0, 5.0];
-
-    if(shot <= rrBullets) {
-        msg("💥 ¡CLICK... PUM! Perdiste todo.");
-    } else {
-        let win = Math.floor(bet * mults[rrBullets]);
-        updateMoney(win);
-        msg(`🍀 ¡CLIC! El tambor estaba vacío. Ganaste $${win}`);
-    }
+    let bet = getBet(); if(!bet) return; updateMoney(-bet);
+    if(Math.floor(Math.random() * 6) + 1 <= rrBullets) { msg("💥 ¡PUM! Perdiste."); } 
+    else { let win = Math.floor(bet * [0, 1.2, 1.5, 2.0, 3.0, 5.0][rrBullets]); updateMoney(win); msg(`🍀 Ganaste $${win}`); }
 }
-
-// --- BLACKJACK ---
+function startTowers() { let b=getBet(); if(!b) return; updateMoney(-b); tBet=b; tLevel=0; tMult=1; updateT(); }
+function nextLevel() { if(!tBet) return; if(Math.random()>0.3){ tLevel++; tMult*=1.5; updateT(); }else{ msg("💥 Caíste"); tBet=0; } }
+function cashout() { if(tBet && tLevel>0){ updateMoney(Math.floor(tBet*tMult)); tBet=0; msg("💰 Cobrado"); } }
+function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
 function startBJ() {
-    let bet = getBet(); if(!bet) return;
-    bjBet = bet; updateMoney(-bjBet);
-    document.getElementById("btnBJStart").disabled = true;
-    document.getElementById("btnBJHit").disabled = false;
-    document.getElementById("btnBJStand").disabled = false;
-    pHand = [rCard(), rCard()]; dHand = [rCard()];
-    updateBJ();
-    if (pHand.reduce((a,b)=>a+b,0) === 21) { updateMoney(bjBet * 3); msg("🃏 BLACKJACK NATURAL!"); endBJ(); }
+    let bet = getBet(); if(!bet) return; bjBet = bet; updateMoney(-bjBet);
+    document.getElementById("btnBJStart").disabled = true; document.getElementById("btnBJHit").disabled = false; document.getElementById("btnBJStand").disabled = false;
+    pHand = [rCard(), rCard()]; dHand = [rCard()]; updateBJ();
+    if (pHand.reduce((a,b)=>a+b,0) === 21) { updateMoney(bjBet * 3); msg("🃏 BLACKJACK x2!"); endBJ(); }
 }
 function rCard() { return Math.floor(Math.random() * 10) + 2; }
 function updateBJ() {
     let ps = pHand.reduce((a,b)=>a+b,0);
-    document.getElementById("pCards").innerText = pHand.join(", ");
-    document.getElementById("pScore").innerText = ps;
-    document.getElementById("dCards").innerText = dHand.join(", ");
-    document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
+    document.getElementById("pCards").innerText = pHand.join(", "); document.getElementById("pScore").innerText = ps;
+    document.getElementById("dCards").innerText = dHand.join(", "); document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
     if(ps > 21) { msg("💥 Te pasaste"); endBJ(); }
 }
 function hit() { if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } }
@@ -192,21 +183,17 @@ function stand() {
     while(ds < 17) { dHand.push(rCard()); ds = dHand.reduce((a,b)=>a+b,0); }
     updateBJ();
     if(ds > 21 || ps > ds) { updateMoney(bjBet * 2); msg("🎉 Ganaste"); }
-    else if(ps === ds) { updateMoney(bjBet); msg("⚖️ Empate"); }
-    else msg("❌ Perdiste");
+    else if(ps === ds) { updateMoney(bjBet); msg("⚖️ Empate"); } else msg("❌ Perdiste");
     endBJ();
 }
 function endBJ() { bjBet = 0; document.getElementById("btnBJStart").disabled = false; document.getElementById("btnBJHit").disabled = true; document.getElementById("btnBJStand").disabled = true; }
-
-// --- SLOTS, DICE, ROULETTE ---
 function spin() {
     let bet = getBet(); if(!bet) return; updateMoney(-bet);
     const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
-    let r = [icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)], icons[Math.floor(Math.random()*5)]];
-    document.getElementById("slotRes").innerText = r.join(" ");
-    if(r[0] === r[1] && r[1] === r[2]) { updateMoney(bet*10); msg("👑 JACKPOT!"); }
-    else if(r[0] === r[1] || r[1] === r[2] || r[0] === r[2]) { updateMoney(bet*2); msg("💵 Par"); }
-    else msg("Perdiste");
+    let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
+    document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
+    if(r1 === r2 && r2 === r3) { updateMoney(bet*10); msg("👑 ¡JACKPOT!"); }
+    else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); } else msg("Perdiste");
 }
 function rollDice() {
     let bet = getBet(); if(!bet) return; updateMoney(-bet);
@@ -223,31 +210,12 @@ function playRoulette(type) {
     } else { if(c===type){ updateMoney(bet*2); msg("🎯 Ganaste"); } else msg("❌ Perdiste"); }
 }
 
-// EXTRAS
-function crime() {
-    if(Math.random()>=0.4){ let b=Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito +$"+b); }
-    else { updateMoney(-1000); msg("🚔 Policía -$1000"); }
-    localStorage.setItem("c_t", Date.now()+600000); actualizarCooldowns();
-}
-function award() {
-    let p=Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono +$"+p);
-    localStorage.setItem("a_t", Date.now()+420000); actualizarCooldowns();
-}
-function actualizarCooldowns() {
-    const bA=document.getElementById("btnAward"), bC=document.getElementById("btnCrime");
-    const check=(btn,k,t)=>{
-        let f=localStorage.getItem(k); if(!f) return;
-        let r=Math.ceil((f-Date.now())/1000);
-        if(r>0){ btn.disabled=true; btn.innerText=`${Math.floor(r/60)}:${(r%60)<10?'0':''}${r%60}`; setTimeout(actualizarCooldowns,1000); }
-        else { btn.disabled=false; btn.innerText=t; localStorage.removeItem(k); }
-    };
-    if(bA) check(bA,"a_t","🎁 Award"); if(bC) check(bC,"c_t","🚔 Crime");
-}
-
+// --- FONDO ---
+function changeBgUrl() { let url = document.getElementById('bgInput').value; if(url) { document.body.style.backgroundImage = `url('${url}')`; localStorage.setItem("user_bg", url); } }
+function changeBgFile(input) { if (input.files && input.files) { let reader = new FileReader(); reader.onload = (e) => { document.body.style.backgroundImage = `url('${e.target.result}')`; localStorage.setItem("user_bg", e.target.result); }; reader.readAsDataURL(input.files); } }
 function resetMoney() { localStorage.clear(); location.reload(); }
 window.onload = () => { 
-    let savedBg = localStorage.getItem("user_bg");
-    if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
+    let savedBg = localStorage.getItem("user_bg"); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
     updateMoney(0); actualizarCooldowns(); 
 };
 </script>
