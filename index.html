@@ -3,32 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <title>🎰 Casino Pro</title>
+
 <style>
-    body { 
-        font-family: Arial, sans-serif; 
-        text-align: center; 
-        background: url('https://tcdn.com.br') no-repeat center center fixed; 
-        background-size: cover;
-        color: white; 
-        margin: 0;
-    }
-    .overlay {
-        background: rgba(0, 0, 0, 0.75);
-        min-height: 100vh;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-    button { 
-        padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
-        border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
-    }
-    button:hover { background: #e6c200; transform: scale(1.05); }
-    button:disabled { background: #555; cursor: not-allowed; }
-    input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
-    .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-    #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
-    #result { font-weight: bold; color: gold; margin-top: 10px; }
+body { 
+    font-family: Arial, sans-serif; 
+    text-align: center; 
+    background: url('https://tcdn.com.br') no-repeat center center fixed; 
+    background-size: cover;
+    color: white; 
+    margin: 0;
+}
+
+.overlay {
+    background: rgba(0, 0, 0, 0.75);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+button { 
+    padding: 10px; margin: 5px; border-radius: 10px; background: gold; 
+    border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+button:hover { background: #e6c200; transform: scale(1.05); }
+button:disabled { background: #555; cursor: not-allowed; }
+
+input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
+
+.game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+
+#money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
+#result { font-weight: bold; color: gold; margin-top: 10px; }
 </style>
+
 </head>
 <body>
 
@@ -64,7 +71,7 @@
     <!-- SLOTS -->
     <div id="slots" class="game">
         <h2>🎰 Slots</h2>
-        <p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💎</p>
+        <p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💰</p>
         <button onclick="spin()">Girar</button>
     </div>
 
@@ -129,11 +136,20 @@ function startBJ() {
     let bet = getBet(); 
     if(!bet) return;
     bjBet = bet;
-    updateMoney(-bjBet); // SE DESCUENTA AL REPARTIR
+    updateMoney(-bjBet); // Se descuenta al inicio
     pHand = [rCard(), rCard()]; 
     dHand = [rCard()];
+    
+    let ps = pHand.reduce((a,b)=>a+b,0);
     updateBJ();
-    msg("Apuesta aceptada. ¡Suerte!");
+
+    if (ps === 21) {
+        updateMoney(bjBet * 3); // Gana x2 + recupera apuesta
+        msg("🃏 ¡BLACKJACK NATURAL! Ganaste x2");
+        bjBet = 0;
+    } else {
+        msg("¿Pedir o Plantarse?");
+    }
 }
 function rCard() { return Math.floor(Math.random() * 10) + 2; }
 function updateBJ() {
@@ -144,86 +160,77 @@ function updateBJ() {
     document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
     if(ps > 21) { msg("💥 ¡Te pasaste!"); bjBet = 0; }
 }
-function hit() { 
-    if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } 
-}
+function hit() { if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } }
 function stand() {
     if(bjBet <= 0) return;
     let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
     while(ds < 17) { dHand.push(rCard()); ds = dHand.reduce((a,b)=>a+b,0); }
     updateBJ();
-    if(ds > 21 || ps > ds) { 
-        updateMoney(bjBet * 2); msg("🎉 ¡Ganaste!"); 
-    } else if(ps === ds) { 
-        updateMoney(bjBet); msg("⚖️ Empate"); 
-    } else { 
-        msg("❌ Perdiste"); 
-    }
+    if(ds > 21 || ps > ds) { updateMoney(bjBet * 2); msg("🎉 Ganaste"); }
+    else if(ps === ds) { updateMoney(bjBet); msg("⚖️ Empate"); }
+    else msg("❌ Perdiste");
     bjBet = 0;
 }
 
 function spin() {
     let bet = getBet(); if(!bet) return;
-    updateMoney(-bet); // SE DESCUENTA AL GIRAR
+    updateMoney(-bet);
     const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
     let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
     document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
     if(r1 === r2 && r2 === r3) { updateMoney(bet*10); msg("👑 ¡JACKPOT!"); }
     else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); }
-    else { msg("Perdiste"); }
+    else msg("Perdiste");
 }
 
 function rollDice() {
     let bet = getBet(); if(!bet) return;
-    updateMoney(-bet); // SE DESCUENTA AL TIRAR
+    updateMoney(-bet);
     let d = Math.floor(Math.random()*6)+1;
     document.getElementById("diceRes").innerText = d;
-    if(d > 3) { updateMoney(bet*2); msg("🎲 ¡Ganaste!"); }
-    else { msg("🎲 Perdiste"); }
+    if(d > 3) { updateMoney(bet*2); msg("🎲 Ganaste"); }
+    else msg("🎲 Perdiste");
 }
 
 function startTowers() { 
     tBet = getBet(); if(!tBet) return; 
-    updateMoney(-tBet); // SE DESCUENTA AL EMPEZAR
-    tLevel=0; tMult=1; updateT(); msg("Torre iniciada"); 
+    updateMoney(-tBet); tLevel=0; tMult=1; updateT(); 
 }
 function nextLevel() {
     if(!tBet) return;
     if(Math.random() > 0.3) { tLevel++; tMult *= 1.5; updateT(); }
-    else { msg("💥 ¡Cayó la torre!"); tBet = 0; }
+    else { msg("💥 ¡Torre caída!"); tBet = 0; }
 }
-function cashout() { 
-    if(tBet && tLevel > 0) { updateMoney(Math.floor(tBet * tMult)); msg("💰 Retirado"); tBet = 0; } 
-}
+function cashout() { if(tBet && tLevel > 0) { updateMoney(Math.floor(tBet * tMult)); tBet = 0; msg("💰 Cobrado"); } }
 function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
 
 function playRoulette(type) {
     let bet = getBet(); if(!bet) return;
-    updateMoney(-bet); // SE DESCUENTA AL APOSTAR
+    updateMoney(-bet);
     let n = Math.floor(Math.random()*37);
     let c = n === 0 ? "verde" : (n % 2 === 1 ? "rojo" : "negro");
     document.getElementById("rNumber").innerText = n;
     document.getElementById("rColor").innerText = c.toUpperCase();
     if(type === 'numero') {
         let ch = parseInt(document.getElementById("rInput").value);
-        if(ch === n) { updateMoney(bet*36); msg("🔥 ¡PLENO!"); }
-        else { msg("❌ Fallaste"); }
+        if(ch === n) { updateMoney(bet*36); msg("🔥 PLENO x35!"); }
+        else msg("❌ Fallaste");
     } else {
-        if(c === type) { updateMoney(bet*2); msg("🎯 ¡Ganaste!"); }
-        else { msg("❌ Perdiste"); }
+        if(c === type) { updateMoney(bet*2); msg("🎯 Ganaste"); }
+        else msg("❌ Perdiste");
     }
 }
 
 // --- EXTRAS ---
 function crime() {
     if(Math.random() >= 0.4) {
-        let b = Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito: +$"+b);
-    } else { updateMoney(-1000); msg("🚔 Policía: -$1000"); }
+        let b = Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito +$"+b);
+    } else { updateMoney(-1000); msg("🚔 Policía -$1000"); }
     localStorage.setItem("c_t", Date.now() + 600000);
     actualizarCooldowns();
 }
 function award() {
-    let p = Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono: +$"+p);
+    let p = Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono +$"+p);
     localStorage.setItem("a_t", Date.now() + 420000);
     actualizarCooldowns();
 }
@@ -245,7 +252,6 @@ function actualizarCooldowns() {
 }
 
 function resetMoney() { localStorage.clear(); location.reload(); }
-
 window.onload = () => { updateMoney(0); actualizarCooldowns(); };
 </script>
 </body>
