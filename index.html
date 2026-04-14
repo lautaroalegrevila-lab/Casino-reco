@@ -7,6 +7,7 @@
 <style>
 body { font-family: Arial, sans-serif; text-align: center; background: black; color: white; }
 button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; }
+input { padding: 5px; }
 .game { display: none; }
 </style>
 </head>
@@ -16,36 +17,36 @@ button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; }
 <p>💰 Dinero: <span id="money">1000</span></p>
 
 <h3>Juegos</h3>
+<button onclick="showGame('blackjack')">🃏 Blackjack</button>
 <button onclick="showGame('slots')">🎰 Slots</button>
 <button onclick="showGame('dice')">🎲 Dados</button>
+<button onclick="showGame('towers')">🏗️ Towers</button>
+<button onclick="showGame('roulette')">🎰 Ruleta</button>
+<button onclick="showGame('russian')">🔫 Ruleta Rusa</button>
 <button onclick="showGame('online')">🌐 Online</button>
 
 <h3>Extras</h3>
 <button onclick="crime()">🚔 Crime</button>
 <button onclick="award()">🎁 Award</button>
+<button onclick="daily()">⭐ Daily</button>
 
+<p>Apuesta (A = todo):</p>
 <input id="bet" value="100">
 
-<div id="slots" class="game">
-<h2>Slots</h2>
-<p id="slotRes">-</p>
-<button onclick="spin()">Girar</button>
-</div>
-
-<div id="dice" class="game">
-<h2>Dados</h2>
-<p id="diceRes">-</p>
-<button onclick="rollDice()">Tirar</button>
-</div>
-
+<!-- ONLINE -->
 <div id="online" class="game">
 <h2>🌐 Jugadores reales</h2>
 <ul id="onlineList"></ul>
 </div>
 
+<!-- JUEGOS -->
+<div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes">-</p><button onclick="spin()">Girar</button></div>
+<div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes">-</p><button onclick="rollDice()">Tirar</button></div>
+<div id="towers" class="game"><h2>🏗️ Towers</h2><p>Nivel <span id="level">0</span> x<span id="mult">1</span></p><button onclick="startTowers()">Start</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Cobrar</button></div>
+
 <p id="result"></p>
 
-<!-- 🔥 FIREBASE -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -67,16 +68,16 @@ if(!playerName){
 }
 
 window.saveOnline = function(money){
-  set(ref(db, "players/" + playerName), { money: money });
+  set(ref(db, "players/" + playerName), { money });
 }
 
 window.loadOnline = function(){
   onValue(ref(db, "players"), (snap)=>{
     let data = snap.val() || {};
     let list = document.getElementById("onlineList");
-    list.innerHTML = "";
+    list.innerHTML="";
     for(let n in data){
-      let li = document.createElement("li");
+      let li=document.createElement("li");
       li.innerText = n + " - 💰 " + data[n].money;
       list.appendChild(li);
     }
@@ -89,11 +90,14 @@ let money = parseInt(localStorage.getItem("money")) || 1000;
 
 function updateMoney(a=0){
   money += a;
+  if(money<0) money=0;
   localStorage.setItem("money", money);
-  document.getElementById("money").innerText = money;
+  document.getElementById("money").innerText=money;
 
   if(window.saveOnline) saveOnline(money);
 }
+
+function msg(t){document.getElementById("result").innerText=t;}
 
 function showGame(g){
   document.querySelectorAll('.game').forEach(x=>x.style.display='none');
@@ -102,31 +106,53 @@ function showGame(g){
 }
 
 function getBet(){
-  let b=parseInt(document.getElementById("bet").value);
+  let i=document.getElementById("bet").value;
+  let b=(i.toLowerCase()==="a")?money:parseInt(i);
   if(isNaN(b)||b<=0||b>money)return null;
   return b;
 }
 
+// Slots
 function spin(){
   let b=getBet(); if(!b)return;
   updateMoney(-b);
-  if(Math.random()<0.3){ updateMoney(b*2); }
+  let r=Math.random();
+  if(r<0.2){updateMoney(b*5);msg("JACKPOT");}
+  else if(r<0.5){updateMoney(b*2);msg("Ganaste");}
+  else msg("Perdiste");
 }
 
+// Dados
 function rollDice(){
   let b=getBet(); if(!b)return;
   updateMoney(-b);
-  if(Math.random()<0.5){ updateMoney(b*2); }
+  if(Math.random()<0.5){updateMoney(b*2);msg("Ganaste");}
+  else msg("Perdiste");
 }
 
+// Towers
+let tBet=0,tMult=1;
+function startTowers(){let b=getBet();if(!b)return;updateMoney(-b);tBet=b;tMult=1;}
+function nextLevel(){if(Math.random()<0.3){msg("💥");tBet=0;}else{tMult++;}}
+function cashout(){if(tBet){updateMoney(tBet*tMult);tBet=0;}}
+
+// Crime
 function crime(){
-  if(Math.random()<0.4){ updateMoney(-2000); }
-  else { updateMoney(Math.floor(Math.random()*4000)+5000); }
+  if(Math.random()<0.4){updateMoney(-2000);msg("🚔 Fallaste");}
+  else{let w=Math.floor(Math.random()*4000)+5000;updateMoney(w);msg("💰 "+w);}
 }
 
-function award(){ updateMoney(2000); }
+// Award
+function award(){updateMoney(2000);msg("+2000");}
 
-window.onload=()=>{ updateMoney(0); }
+// Daily
+function daily(){updateMoney(10000);msg("Daily +10000");}
+
+// INIT
+window.onload=()=>{
+  updateMoney(0);
+  if(window.loadOnline) loadOnline();
+}
 </script>
 
 </body>
