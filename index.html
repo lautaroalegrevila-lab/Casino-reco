@@ -3,221 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <title>🎰 Casino Pro</title>
+
 <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: url('https://tcdn.com.br') no-repeat center center fixed; background-size: cover; color: white; margin: 0; transition: background 0.5s ease; }
-    .overlay { background: rgba(0, 0, 0, 0.75); min-height: 100vh; padding: 20px; box-sizing: border-box; }
-    .bg-config { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px; display: inline-block; border: 1px solid gold; }
-    button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    button:hover { background: #e6c200; transform: scale(1.05); }
-    button:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
-    input { padding: 5px; width: 100px; text-align: center; border-radius: 5px; border: none; }
-    .game { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-    #money { color: #00ff00; font-weight: bold; font-size: 1.3em; }
-    #result { font-weight: bold; color: gold; margin-top: 10px; min-height: 1.2em; }
+body { font-family: Arial, sans-serif; text-align: center; background: black; color: white; }
+button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; }
+.game { display: none; }
 </style>
 </head>
 <body>
 
-<div class="overlay">
-    <h1>🎰 Casino Pro</h1>
+<h1>🎰 Casino Pro</h1>
+<p>💰 Dinero: <span id="money">1000</span></p>
 
-    <div class="bg-config">
-        <span>🖼️ Fondo:</span>
-        <input type="text" id="bgInput" placeholder="Link de imagen...">
-        <button onclick="changeBgUrl()">Aplicar</button>
-        <button onclick="document.getElementById('fileInput').click()">Subir</button>
-        <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="changeBgFile(this)">
-    </div>
+<h3>Juegos</h3>
+<button onclick="showGame('slots')">🎰 Slots</button>
+<button onclick="showGame('dice')">🎲 Dados</button>
+<button onclick="showGame('online')">🌐 Online</button>
 
-    <p>💰 Dinero: <span id="money">1000</span></p>
+<h3>Extras</h3>
+<button onclick="crime()">🚔 Crime</button>
+<button onclick="award()">🎁 Award</button>
 
-    <div id="main-nav">
-        <h3>Juegos</h3>
-        <button onclick="showGame('blackjack')">🃏 Blackjack</button>
-        <button onclick="showGame('slots')">🎰 Slots</button>
-        <button onclick="showGame('dice')">🎲 Dados</button>
-        <button onclick="showGame('russian')">🔫 Ruleta Rusa</button>
-        <button onclick="showGame('towers')">🏗️ Towers</button>
-        <button onclick="showGame('roulette')">🎰 Ruleta</button>
-    </div>
+<input id="bet" value="100">
 
-    <h3>Extras</h3>
-    <button id="btnDaily" onclick="daily()" style="background: #00ff00; color: black;">⭐ DAILY $10k</button>
-    <button id="btnCrime" onclick="crime()">🚔 Crime</button>
-    <button id="btnAward" onclick="award()">🎁 Award</button>
-    <button onclick="resetMoney()">💥 Reset</button>
-
-    <p>Apuesta (poné "A" para todo):</p>
-    <input type="text" id="bet" value="100">
-
-    <!-- SECCIONES DE JUEGOS -->
-    <div id="russian" class="game">
-        <h2>🔫 Ruleta Rusa</h2>
-        <p>Balas: <span id="bulletCount" style="color:red">1</span> / 6 | Premio: <span id="rrMult" style="color:lawngreen">x1.20</span></p>
-        <button onclick="addBullet()">➕ Bala</button><button onclick="removeBullet()">➖ Quitar</button><br><br>
-        <button onclick="playRussian()" style="background: red; color: white;">💥 GATILLO</button>
-    </div>
-
-    <div id="towers" class="game">
-        <h2>🏗️ Towers</h2>
-        <p>Nivel: <span id="level">0</span> | x<span id="mult">1.00</span></p>
-        <button onclick="startTowers()">Empezar</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Retirarse</button>
-    </div>
-
-    <div id="blackjack" class="game">
-        <h2>🃏 Blackjack</h2>
-        <p>Jugador: <span id="pCards">-</span> | Puntos: <span id="pScore">0</span></p>
-        <p>Crupier: <span id="dCards">-</span> | Puntos: <span id="dScore">0</span></p>
-        <button id="btnBJStart" onclick="startBJ()">Repartir</button><button id="btnBJHit" onclick="hit()" disabled>Pedir</button><button id="btnBJStand" onclick="stand()" disabled>Plantarse</button>
-    </div>
-
-    <div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes" style="font-size: 2.5em;">💎 7️⃣ 💰</p><button onclick="spin()">Girar</button></div>
-    <div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes" style="font-size: 2em;">-</p><button onclick="rollDice()">Tirar</button></div>
-    <div id="roulette" class="game"><h2>🎰 Ruleta</h2><p>🎯 <span id="rNumber">-</span> | <span id="rColor">-</span></p><input type="number" id="rInput" placeholder="0-36"><br><button onclick="playRoulette('rojo')">🔴 Rojo</button><button onclick="playRoulette('negro')">⚫ Negro</button><button onclick="playRoulette('numero')">🎯 Pleno</button></div>
-
-    <p id="result"></p>
+<div id="slots" class="game">
+<h2>Slots</h2>
+<p id="slotRes">-</p>
+<button onclick="spin()">Girar</button>
 </div>
+
+<div id="dice" class="game">
+<h2>Dados</h2>
+<p id="diceRes">-</p>
+<button onclick="rollDice()">Tirar</button>
+</div>
+
+<div id="online" class="game">
+<h2>🌐 Jugadores reales</h2>
+<ul id="onlineList"></ul>
+</div>
+
+<p id="result"></p>
+
+<!-- 🔥 FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH",
+  databaseURL: "TU_DB_URL",
+  projectId: "TU_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let playerName = localStorage.getItem("playerName");
+if(!playerName){
+  playerName = prompt("Tu nombre:");
+  localStorage.setItem("playerName", playerName);
+}
+
+window.saveOnline = function(money){
+  set(ref(db, "players/" + playerName), { money: money });
+}
+
+window.loadOnline = function(){
+  onValue(ref(db, "players"), (snap)=>{
+    let data = snap.val() || {};
+    let list = document.getElementById("onlineList");
+    list.innerHTML = "";
+    for(let n in data){
+      let li = document.createElement("li");
+      li.innerText = n + " - 💰 " + data[n].money;
+      list.appendChild(li);
+    }
+  });
+}
+</script>
 
 <script>
 let money = parseInt(localStorage.getItem("money")) || 1000;
-let bjBet = 0, pHand = [], dHand = [];
-let tBet = 0, tLevel = 0, tMult = 1;
-let rrBullets = 1;
 
-function updateMoney(amount = 0) {
-    money += amount;
-    if (money < 0) money = 0;
-    localStorage.setItem("money", money);
-    document.getElementById("money").innerText = money;
+function updateMoney(a=0){
+  money += a;
+  localStorage.setItem("money", money);
+  document.getElementById("money").innerText = money;
+
+  if(window.saveOnline) saveOnline(money);
 }
 
-function msg(t) { document.getElementById("result").innerText = t; }
-
-function showGame(game) {
-    if(bjBet > 0 || tBet > 0) { alert("Terminá la partida actual"); return; }
-    document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
-    document.getElementById(game).style.display = 'block';
+function showGame(g){
+  document.querySelectorAll('.game').forEach(x=>x.style.display='none');
+  document.getElementById(g).style.display='block';
+  if(g==="online" && window.loadOnline) loadOnline();
 }
 
-function getBet() {
-    let input = document.getElementById("bet").value;
-    let val = (input.toLowerCase() === "a") ? money : parseInt(input);
-    if (isNaN(val) || val <= 0 || val > money) { alert("Apuesta inválida"); return null; }
-    return val;
+function getBet(){
+  let b=parseInt(document.getElementById("bet").value);
+  if(isNaN(b)||b<=0||b>money)return null;
+  return b;
 }
 
-// --- NUEVO DAILY $10.000 ---
-function daily() {
-    updateMoney(10000);
-    msg("⭐ ¡Reclamaste tus $10.000 diarios!");
-    localStorage.setItem("d_t", Date.now() + 86400000); // 24 horas
-    actualizarCooldowns();
+function spin(){
+  let b=getBet(); if(!b)return;
+  updateMoney(-b);
+  if(Math.random()<0.3){ updateMoney(b*2); }
 }
 
-// --- OTROS EXTRAS ---
-function crime() {
-    if(Math.random()>=0.4){ let b=Math.floor(Math.random()*8001)+1000; updateMoney(b); msg("🔫 Éxito +$"+b); } 
-    else { updateMoney(-1000); msg("🚔 Policía -$1000"); }
-    localStorage.setItem("c_t", Date.now()+600000); actualizarCooldowns();
-}
-function award() {
-    let p=Math.floor(Math.random()*3001)+2000; updateMoney(p); msg("🎁 Bono +$"+p);
-    localStorage.setItem("a_t", Date.now()+420000); actualizarCooldowns();
+function rollDice(){
+  let b=getBet(); if(!b)return;
+  updateMoney(-b);
+  if(Math.random()<0.5){ updateMoney(b*2); }
 }
 
-function actualizarCooldowns() {
-    const config = [
-        { id: "btnDaily", clave: "d_t", texto: "⭐ DAILY $10k" },
-        { id: "btnAward", clave: "a_t", texto: "🎁 Award" },
-        { id: "btnCrime", clave: "c_t", texto: "🚔 Crime" }
-    ];
-    config.forEach(item => {
-        let btn = document.getElementById(item.id);
-        let meta = localStorage.getItem(item.clave);
-        if (meta) {
-            let r = Math.ceil((meta - Date.now()) / 1000);
-            if (r > 0) {
-                btn.disabled = true;
-                let h = Math.floor(r / 3600), m = Math.floor((r % 3600) / 60), s = r % 60;
-                btn.innerText = (h > 0 ? h + "h " : "") + m + ":" + (s < 10 ? '0' : '') + s;
-                setTimeout(actualizarCooldowns, 1000);
-            } else { btn.disabled = false; btn.innerText = item.texto; localStorage.removeItem(item.clave); }
-        }
-    });
+function crime(){
+  if(Math.random()<0.4){ updateMoney(-2000); }
+  else { updateMoney(Math.floor(Math.random()*4000)+5000); }
 }
 
-// --- JUEGOS (Ruleta Rusa, Towers, Blackjack, etc) ---
-function addBullet() { if(rrBullets < 5) { rrBullets++; updateRR(); } }
-function removeBullet() { if(rrBullets > 1) { rrBullets--; updateRR(); } }
-function updateRR() {
-    document.getElementById("bulletCount").innerText = rrBullets;
-    let mults = [0, 1.2, 1.5, 2.0, 3.0, 5.0];
-    document.getElementById("rrMult").innerText = "x" + mults[rrBullets].toFixed(2);
-}
-function playRussian() {
-    let bet = getBet(); if(!bet) return; updateMoney(-bet);
-    if(Math.floor(Math.random() * 6) + 1 <= rrBullets) { msg("💥 ¡PUM! Perdiste."); } 
-    else { let win = Math.floor(bet * [0, 1.2, 1.5, 2.0, 3.0, 5.0][rrBullets]); updateMoney(win); msg(`🍀 Ganaste $${win}`); }
-}
-function startTowers() { let b=getBet(); if(!b) return; updateMoney(-b); tBet=b; tLevel=0; tMult=1; updateT(); }
-function nextLevel() { if(!tBet) return; if(Math.random()>0.3){ tLevel++; tMult*=1.5; updateT(); }else{ msg("💥 Caíste"); tBet=0; } }
-function cashout() { if(tBet && tLevel>0){ updateMoney(Math.floor(tBet*tMult)); tBet=0; msg("💰 Cobrado"); } }
-function updateT() { document.getElementById("level").innerText=tLevel; document.getElementById("mult").innerText=tMult.toFixed(2); }
-function startBJ() {
-    let bet = getBet(); if(!bet) return; bjBet = bet; updateMoney(-bjBet);
-    document.getElementById("btnBJStart").disabled = true; document.getElementById("btnBJHit").disabled = false; document.getElementById("btnBJStand").disabled = false;
-    pHand = [rCard(), rCard()]; dHand = [rCard()]; updateBJ();
-    if (pHand.reduce((a,b)=>a+b,0) === 21) { updateMoney(bjBet * 3); msg("🃏 BLACKJACK x2!"); endBJ(); }
-}
-function rCard() { return Math.floor(Math.random() * 10) + 2; }
-function updateBJ() {
-    let ps = pHand.reduce((a,b)=>a+b,0);
-    document.getElementById("pCards").innerText = pHand.join(", "); document.getElementById("pScore").innerText = ps;
-    document.getElementById("dCards").innerText = dHand.join(", "); document.getElementById("dScore").innerText = dHand.reduce((a,b)=>a+b,0);
-    if(ps > 21) { msg("💥 Te pasaste"); endBJ(); }
-}
-function hit() { if(bjBet > 0) { pHand.push(rCard()); updateBJ(); } }
-function stand() {
-    if(bjBet <= 0) return;
-    let ps = pHand.reduce((a,b)=>a+b,0), ds = dHand.reduce((a,b)=>a+b,0);
-    while(ds < 17) { dHand.push(rCard()); ds = dHand.reduce((a,b)=>a+b,0); }
-    updateBJ();
-    if(ds > 21 || ps > ds) { updateMoney(bjBet * 2); msg("🎉 Ganaste"); }
-    else if(ps === ds) { updateMoney(bjBet); msg("⚖️ Empate"); } else msg("❌ Perdiste");
-    endBJ();
-}
-function endBJ() { bjBet = 0; document.getElementById("btnBJStart").disabled = false; document.getElementById("btnBJHit").disabled = true; document.getElementById("btnBJStand").disabled = true; }
-function spin() {
-    let bet = getBet(); if(!bet) return; updateMoney(-bet);
-    const icons = ["💎", "7️⃣", "💰", "👑", "🍀"];
-    let r1 = icons[Math.floor(Math.random()*5)], r2 = icons[Math.floor(Math.random()*5)], r3 = icons[Math.floor(Math.random()*5)];
-    document.getElementById("slotRes").innerText = `${r1} ${r2} ${r3}`;
-    if(r1 === r2 && r2 === r3) { updateMoney(bet*10); msg("👑 ¡JACKPOT!"); }
-    else if(r1 === r2 || r2 === r3 || r1 === r3) { updateMoney(bet*2); msg("💵 ¡Par!"); } else msg("Perdiste");
-}
-function rollDice() {
-    let bet = getBet(); if(!bet) return; updateMoney(-bet);
-    let d = Math.floor(Math.random()*6)+1; document.getElementById("diceRes").innerText = d;
-    if(d > 3) { updateMoney(bet*2); msg("🎲 Ganaste"); } else msg("🎲 Perdiste");
-}
-function playRoulette(type) {
-    let bet = getBet(); if(!bet) return; updateMoney(-bet);
-    let n = Math.floor(Math.random()*37), c = n===0?"verde":(n%2===1?"rojo":"negro");
-    document.getElementById("rNumber").innerText = n; document.getElementById("rColor").innerText = c.toUpperCase();
-    if(type==='numero'){
-        let ch=parseInt(document.getElementById("rInput").value);
-        if(ch===n){ updateMoney(bet*36); msg("🔥 PLENO!"); } else msg("❌ Fallaste");
-    } else { if(c===type){ updateMoney(bet*2); msg("🎯 Ganaste"); } else msg("❌ Perdiste"); }
-}
+function award(){ updateMoney(2000); }
 
-// --- FONDO ---
-function changeBgUrl() { let url = document.getElementById('bgInput').value; if(url) { document.body.style.backgroundImage = `url('${url}')`; localStorage.setItem("user_bg", url); } }
-function changeBgFile(input) { if (input.files && input.files) { let reader = new FileReader(); reader.onload = (e) => { document.body.style.backgroundImage = `url('${e.target.result}')`; localStorage.setItem("user_bg", e.target.result); }; reader.readAsDataURL(input.files); } }
-function resetMoney() { localStorage.clear(); location.reload(); }
-window.onload = () => { 
-    let savedBg = localStorage.getItem("user_bg"); if(savedBg) document.body.style.backgroundImage = `url('${savedBg}')`;
-    updateMoney(0); actualizarCooldowns(); 
-};
+window.onload=()=>{ updateMoney(0); }
 </script>
+
 </body>
 </html>
