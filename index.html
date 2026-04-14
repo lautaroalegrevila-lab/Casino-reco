@@ -2,47 +2,47 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>🎰 Casino Pro</title>
+<title>🎰 Casino Pro PRO</title>
 
 <style>
-body { font-family: Arial, sans-serif; text-align: center; background: black; color: white; }
+body { font-family: Arial; text-align: center; background: black; color: white; }
 button { padding: 10px; margin: 5px; border-radius: 10px; background: gold; }
-input { padding: 5px; }
+button:disabled { background: gray; }
 .game { display: none; }
 </style>
 </head>
 <body>
 
-<h1>🎰 Casino Pro</h1>
+<h1>🎰 Casino PRO</h1>
 <p>💰 Dinero: <span id="money">1000</span></p>
 
 <h3>Juegos</h3>
-<button onclick="showGame('blackjack')">🃏 Blackjack</button>
 <button onclick="showGame('slots')">🎰 Slots</button>
 <button onclick="showGame('dice')">🎲 Dados</button>
-<button onclick="showGame('towers')">🏗️ Towers</button>
-<button onclick="showGame('roulette')">🎰 Ruleta</button>
-<button onclick="showGame('russian')">🔫 Ruleta Rusa</button>
 <button onclick="showGame('online')">🌐 Online</button>
+<button onclick="showGame('leaderboard')">🏆 Ranking</button>
 
 <h3>Extras</h3>
-<button onclick="crime()">🚔 Crime</button>
-<button onclick="award()">🎁 Award</button>
-<button onclick="daily()">⭐ Daily</button>
+<button id="btnCrime" onclick="crime()">🚔 Crime</button>
+<button id="btnAward" onclick="award()">🎁 Award</button>
+<button id="btnDaily" onclick="daily()">⭐ Daily</button>
 
-<p>Apuesta (A = todo):</p>
 <input id="bet" value="100">
 
 <!-- ONLINE -->
 <div id="online" class="game">
-<h2>🌐 Jugadores reales</h2>
+<h2>🌐 Jugadores</h2>
 <ul id="onlineList"></ul>
 </div>
 
-<!-- JUEGOS -->
-<div id="slots" class="game"><h2>🎰 Slots</h2><p id="slotRes">-</p><button onclick="spin()">Girar</button></div>
-<div id="dice" class="game"><h2>🎲 Dados</h2><p id="diceRes">-</p><button onclick="rollDice()">Tirar</button></div>
-<div id="towers" class="game"><h2>🏗️ Towers</h2><p>Nivel <span id="level">0</span> x<span id="mult">1</span></p><button onclick="startTowers()">Start</button><button onclick="nextLevel()">Subir</button><button onclick="cashout()">Cobrar</button></div>
+<!-- RANKING -->
+<div id="leaderboard" class="game">
+<h2>🏆 Top jugadores</h2>
+<ol id="topList"></ol>
+</div>
+
+<div id="slots" class="game"><h2>Slots</h2><button onclick="spin()">Girar</button></div>
+<div id="dice" class="game"><h2>Dados</h2><button onclick="rollDice()">Tirar</button></div>
 
 <p id="result"></p>
 
@@ -67,20 +67,34 @@ if(!playerName){
   localStorage.setItem("playerName", playerName);
 }
 
-window.saveOnline = function(money){
-  set(ref(db, "players/" + playerName), { money });
+// guardar
+window.saveOnline = (money)=>{
+  set(ref(db,"players/"+playerName),{money});
 }
 
-window.loadOnline = function(){
-  onValue(ref(db, "players"), (snap)=>{
-    let data = snap.val() || {};
-    let list = document.getElementById("onlineList");
+// lista jugadores
+window.loadOnline = ()=>{
+  onValue(ref(db,"players"),snap=>{
+    let data=snap.val()||{};
+    let list=document.getElementById("onlineList");
     list.innerHTML="";
     for(let n in data){
       let li=document.createElement("li");
-      li.innerText = n + " - 💰 " + data[n].money;
+      li.innerText=n+" - 💰 "+data[n].money;
       list.appendChild(li);
     }
+
+    // ranking
+    let arr=Object.entries(data);
+    arr.sort((a,b)=>b[1].money-a[1].money);
+
+    let top=document.getElementById("topList");
+    top.innerHTML="";
+    arr.slice(0,10).forEach(p=>{
+      let li=document.createElement("li");
+      li.innerText=p[0]+" - 💰 "+p[1].money;
+      top.appendChild(li);
+    });
   });
 }
 </script>
@@ -89,11 +103,10 @@ window.loadOnline = function(){
 let money = parseInt(localStorage.getItem("money")) || 1000;
 
 function updateMoney(a=0){
-  money += a;
+  money+=a;
   if(money<0) money=0;
-  localStorage.setItem("money", money);
+  localStorage.setItem("money",money);
   document.getElementById("money").innerText=money;
-
   if(window.saveOnline) saveOnline(money);
 }
 
@@ -102,7 +115,7 @@ function msg(t){document.getElementById("result").innerText=t;}
 function showGame(g){
   document.querySelectorAll('.game').forEach(x=>x.style.display='none');
   document.getElementById(g).style.display='block';
-  if(g==="online" && window.loadOnline) loadOnline();
+  if(window.loadOnline) loadOnline();
 }
 
 function getBet(){
@@ -112,45 +125,79 @@ function getBet(){
   return b;
 }
 
-// Slots
-function spin(){
-  let b=getBet(); if(!b)return;
-  updateMoney(-b);
-  let r=Math.random();
-  if(r<0.2){updateMoney(b*5);msg("JACKPOT");}
-  else if(r<0.5){updateMoney(b*2);msg("Ganaste");}
-  else msg("Perdiste");
-}
+// juegos
+function spin(){let b=getBet();if(!b)return;updateMoney(-b);if(Math.random()<0.5)updateMoney(b*2);}
+function rollDice(){let b=getBet();if(!b)return;updateMoney(-b);if(Math.random()<0.5)updateMoney(b*2);}
 
-// Dados
-function rollDice(){
-  let b=getBet(); if(!b)return;
-  updateMoney(-b);
-  if(Math.random()<0.5){updateMoney(b*2);msg("Ganaste");}
-  else msg("Perdiste");
+// cooldowns
+function formatTime(ms){
+  let s=Math.floor(ms/1000);
+  let m=Math.floor(s/60);
+  s=s%60;
+  return m+":"+(s<10?"0":"")+s;
 }
-
-// Towers
-let tBet=0,tMult=1;
-function startTowers(){let b=getBet();if(!b)return;updateMoney(-b);tBet=b;tMult=1;}
-function nextLevel(){if(Math.random()<0.3){msg("💥");tBet=0;}else{tMult++;}}
-function cashout(){if(tBet){updateMoney(tBet*tMult);tBet=0;}}
 
 // Crime
 function crime(){
-  if(Math.random()<0.4){updateMoney(-2000);msg("🚔 Fallaste");}
-  else{let w=Math.floor(Math.random()*4000)+5000;updateMoney(w);msg("💰 "+w);}
+  let now=Date.now();
+  let next=localStorage.getItem("crime_cd")||0;
+  if(now<next)return;
+
+  if(Math.random()<0.4) updateMoney(-2000);
+  else updateMoney(Math.floor(Math.random()*4000)+5000);
+
+  localStorage.setItem("crime_cd",now+600000);
 }
 
 // Award
-function award(){updateMoney(2000);msg("+2000");}
+function award(){
+  let now=Date.now();
+  let next=localStorage.getItem("award_cd")||0;
+  if(now<next)return;
+
+  updateMoney(2000);
+  localStorage.setItem("award_cd",now+420000);
+}
 
 // Daily
-function daily(){updateMoney(10000);msg("Daily +10000");}
+function daily(){
+  let now=Date.now();
+  let next=localStorage.getItem("daily_cd")||0;
+  if(now<next)return;
+
+  updateMoney(10000);
+  localStorage.setItem("daily_cd",now+86400000);
+}
+
+// actualizar botones
+function updateCooldowns(){
+  const list=[
+    {id:"btnCrime",key:"crime_cd",txt:"🚔 Crime"},
+    {id:"btnAward",key:"award_cd",txt:"🎁 Award"},
+    {id:"btnDaily",key:"daily_cd",txt:"⭐ Daily"}
+  ];
+
+  list.forEach(x=>{
+    let btn=document.getElementById(x.id);
+    let t=localStorage.getItem(x.key)||0;
+    let diff=t-Date.now();
+
+    if(diff>0){
+      btn.disabled=true;
+      btn.innerText=formatTime(diff);
+    }else{
+      btn.disabled=false;
+      btn.innerText=x.txt;
+    }
+  });
+
+  setTimeout(updateCooldowns,1000);
+}
 
 // INIT
 window.onload=()=>{
   updateMoney(0);
+  updateCooldowns();
   if(window.loadOnline) loadOnline();
 }
 </script>
